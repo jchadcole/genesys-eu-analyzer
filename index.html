@@ -1,0 +1,1777 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Genesys EU Analyzer</title>
+<meta name="description" content="Model Genesys Cloud Experience Unit consumption, then test whether each AI self-service use case pays for itself.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/*
+ * One theme for every tab. Genesys white, navy/blue and orange.
+ * Brand tokens: --g-orange, --g-navy, --g-blue. Everything else derives from them.
+ * Tier colors climb in cost: IVR gray -> Bot teal -> VA blue -> AVA orange.
+ */
+:root{
+  --g-orange:#FF4F1F; --g-orange-ink:#C83A12; --g-navy:#152550; --g-blue:#2350C8;
+  --bg:#F4F6FA; --panel:#FFFFFF; --ink:#152550; --muted:#5A6582; --line:#DCE1EB; --soft:#EEF1F7;
+  --head:#152550; --head-ink:#FFFFFF; --head-muted:#B9C3DD;
+  --accent:var(--g-blue); --accent-ink:#FFFFFF; --hot:var(--g-orange); --hot-ink:var(--g-orange-ink);
+  --t-ivr:#7C8798; --t-bot:#0E8FA3; --t-va:#2350C8; --t-ava:#E0461A; --fixed:#6A55C9;
+  --good:#1E8A52; --warn:#B4560A; --bad:#C0352B;
+  --f-body:"Roboto",system-ui,sans-serif; --f-mono:"Roboto Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1322; --panel:#141E33; --ink:#E8ECF5; --muted:#9AA6BF; --line:#26324D; --soft:#1B2740;
+  --head:#08101F; --head-ink:#FFFFFF; --head-muted:#9AA6BF;
+  --accent:#6F8CF0; --accent-ink:#0C1322; --hot:#FF6A3D; --hot-ink:#FF8A63;
+  --t-ivr:#7E889B; --t-bot:#1A9CB0; --t-va:#5B7FF0; --t-ava:#F0602E; --fixed:#9B8CF0;
+  --good:#4FBF83; --warn:#E5A23A; --bad:#F07067; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C1322; --panel:#141E33; --ink:#E8ECF5; --muted:#9AA6BF; --line:#26324D; --soft:#1B2740;
+  --head:#08101F; --head-ink:#FFFFFF; --head-muted:#9AA6BF;
+  --accent:#6F8CF0; --accent-ink:#0C1322; --hot:#FF6A3D; --hot-ink:#FF8A63;
+  --t-ivr:#7E889B; --t-bot:#1A9CB0; --t-va:#5B7FF0; --t-ava:#F0602E; --fixed:#9B8CF0;
+  --good:#4FBF83; --warn:#E5A23A; --bad:#F07067; color-scheme:dark }
+:root[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+
+/* App header: navy band with the tab bar along its bottom edge */
+.apphead{background:var(--head);color:var(--head-ink);border-bottom:3px solid var(--g-orange)}
+.apphead .in{margin:0 auto;padding:14px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px}
+.brandrow{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:30px;height:30px;border-radius:50%;background:var(--g-orange);display:grid;place-items:center;flex:none}
+.mark i{width:12px;height:12px;border-radius:50%;background:var(--head);display:block}
+h1{font-size:20px;font-weight:700;margin:0;letter-spacing:.01em}
+.brand p{margin:0;color:var(--head-muted);font-size:12.5px}
+.theme{display:inline-flex;border:1px solid rgba(255,255,255,.25);border-radius:6px;overflow:hidden}
+.theme button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--head-muted);padding:5px 10px;cursor:pointer}
+.theme button+button{border-left:1px solid rgba(255,255,255,.25)}
+.theme button[aria-pressed="true"]{background:rgba(255,255,255,.14);color:#fff;font-weight:500}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-bottom:-3px}
+nav.tabs button{font:inherit;font-weight:500;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--head-muted);padding:8px 14px 9px;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{color:#fff}
+nav.tabs button[aria-selected="true"]{color:#fff;border-bottom-color:#fff}
+nav.tabs .step{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--g-orange);color:#fff;font-size:11px;font-weight:700;margin-right:6px}
+nav.tabs .sep{width:1px;background:rgba(255,255,255,.2);margin:8px 6px}
+
+.wrap{margin:0 auto;padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h2{font-size:16px;font-weight:700;margin:0 0 4px}
+h3{font-size:12px;margin:0;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:1100px){.grid{grid-template-columns:minmax(0,1fr)}}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+section.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.hint{color:var(--muted);font-size:12.5px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:end}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+label.chk{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+input[type=number]{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+td.num,th.num{text-align:right;font-family:var(--f-mono)}
+td input[type=number]{width:84px;padding:4px 6px}
+td.rate{white-space:nowrap}
+.sub-h{font-size:10px;letter-spacing:.03em;text-transform:none;font-weight:400;color:var(--muted);opacity:.9}
+td .dash{color:var(--muted);font-family:var(--f-mono)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;color:#fff;white-space:nowrap}
+.chip.ivr{background:var(--t-ivr)}.chip.bot{background:var(--t-bot)}.chip.va{background:var(--t-va)}.chip.ava{background:var(--t-ava)}.chip.none{background:var(--muted)}
+.chip.ch{background:var(--soft);color:var(--muted);border:1px solid var(--line)}
+.cat{font-size:11px;font-weight:700;padding:1px 7px;border-radius:4px;border:1px solid currentColor}
+.cat.fixed{color:var(--fixed)}.cat.usage{color:var(--accent)}
+.tiers{display:flex;gap:3px;flex-wrap:nowrap}
+.tierbtn{font:inherit;font-size:12px;font-weight:700;border:1.5px solid var(--line);background:transparent;color:var(--muted);border-radius:5px;padding:2px 6px;cursor:pointer}
+.tierbtn.on.ivr{border-color:var(--t-ivr);background:var(--t-ivr);color:#fff}
+.tierbtn.on.bot{border-color:var(--t-bot);background:var(--t-bot);color:#fff}
+.tierbtn.on.va{border-color:var(--t-va);background:var(--t-va);color:#fff}
+.tierbtn.on.ava{border-color:var(--t-ava);background:var(--t-ava);color:#fff}
+.tierbtn.on.billed{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ink)}
+.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:5px 10px;border-radius:6px;cursor:pointer}
+.btn.primary{background:var(--g-navy);border-color:var(--g-navy);color:#fff}
+:root[data-theme="dark"] .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}}
+.btn.hot{background:var(--g-orange);border-color:var(--g-orange);color:#fff;font-weight:500}
+.btn.x{padding:2px 8px;background:transparent}
+.ladder{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:4px 0 12px}
+.rung{border-radius:6px;padding:8px 10px;color:#fff;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rung b{font-size:15px}
+.rung span{font-size:12px;opacity:.95}
+.rung.ivr{background:var(--t-ivr)}.rung.bot{background:var(--t-bot)}.rung.va{background:var(--t-va)}.rung.ava{background:var(--t-ava)}
+@media (max-width:520px){.ladder{grid-template-columns:repeat(2,minmax(0,1fr))}}
+aside.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;gap:12px;min-width:0;max-height:calc(100vh - 24px);overflow-y:auto}
+@media (max-width:1100px){aside.rail{position:static;max-height:none}}
+@media (max-width:1100px){#tab-breakeven aside.rail{order:-1}}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:end;gap:6px;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.flow .op{color:var(--muted);font-family:var(--f-mono);padding-bottom:18px}
+.flow .fig{display:flex;flex-direction:column;min-width:0}
+.flow .fig b{font-size:22px;line-height:1.1;font-weight:700}
+.flow .fig.net b{font-size:28px;color:var(--hot-ink)}
+.flow .fig span{font-size:11.5px;color:var(--muted)}
+.tier-totals{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.tier-totals b{font-family:var(--f-mono)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-variant-numeric:tabular-nums}
+.kv dt{color:var(--muted)}.kv dd{margin:0;text-align:right;font-family:var(--f-mono)}
+.kv .sum{border-top:1px solid var(--line);padding-top:4px;font-weight:700;color:var(--ink)}
+.bar{display:flex;gap:2px;height:14px;border-radius:4px;overflow:hidden;background:var(--soft);margin:10px 0 8px}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+.legend div{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center}
+.legend s{width:10px;height:10px;border-radius:2px;display:block;text-decoration:none}
+.legend em{font-style:normal;font-family:var(--f-mono);color:var(--muted)}
+.prose p{margin:0 0 8px;max-width:72ch}
+.prose ul{margin:0;padding-left:18px}
+.warnbox{border-left:3px solid var(--warn);background:var(--soft);padding:8px 12px;border-radius:0 6px 6px 0;font-size:13px}
+.infobox{border-left:3px solid var(--accent);background:var(--soft);padding:8px 12px;border-radius:0 6px 6px 0;font-size:13px}
+.src{font-size:11.5px;color:var(--accent);text-decoration:none;white-space:nowrap}
+.src:hover{text-decoration:underline}
+textarea{width:100%;min-height:200px;font-family:var(--f-mono);font-size:12px}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.pathname input{width:100%;min-width:190px}
+.small{font-size:12px;color:var(--muted)}
+.ok{color:var(--good)} .bad{color:var(--warn)}
+.usd{font-size:12px;color:var(--muted);font-family:var(--f-mono);margin-left:6px;white-space:nowrap}
+
+/* Break-even tab */
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{background:var(--soft);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile b{font-size:22px;line-height:1.15;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile .usd{display:block;margin:0;font-size:12px;font-weight:400}
+.tile.hot b{color:var(--hot-ink)}
+.tile span{font-size:12px;color:var(--muted)}
+.uc td{vertical-align:top;padding-top:8px;padding-bottom:8px}
+.uc .nm{font-weight:500;min-width:150px}
+.uc .nm .small{font-weight:400;display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:3px}
+.uc input[type=number]{width:70px}
+.track{position:relative;height:14px;min-width:120px;background:var(--soft);border-radius:4px;margin-top:2px}
+.track .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.track .fill.ok{background:var(--good)} .track .fill.short{background:var(--warn)}
+.track .be{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);box-shadow:0 0 0 2px var(--panel)}
+.track-l{font-size:12px;color:var(--muted);margin-top:4px;max-width:220px}
+.verdict{font-size:12px;font-weight:500}
+.verdict.ok{color:var(--good)} .verdict.short{color:var(--warn)} .verdict.never{color:var(--bad)}
+.keyrow{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.keyrow span{display:inline-flex;gap:6px;align-items:center}
+.keyrow i{display:inline-block;width:14px;height:8px;border-radius:2px}
+.keyrow i.be{width:2px;height:12px;background:var(--ink)}
+svg.chart{display:block;width:100%;max-width:760px;height:auto;overflow:visible}
+svg.chart text{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+svg.chart .grid line{stroke:var(--line)}
+.tip{position:fixed;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:20;font-variant-numeric:tabular-nums}
+details.fold>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary h2::before{content:"▸ ";color:var(--muted)}
+details.fold[open]>summary h2::before{content:"▾ "}
+details.fold[open]>summary{margin-bottom:12px}
+@media (prefers-reduced-motion:no-preference){.bar i,.track .fill{transition:width .25s ease}}
+</style>
+
+<header class="apphead">
+  <div class="in">
+    <div class="brandrow">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"><i></i></div>
+        <div>
+          <h1>Genesys EU Analyzer</h1>
+          <p>Model v<span id="ver"></span> · rates as of <span id="asof"></span> · planning model, not a Genesys billing statement</p>
+        </div>
+      </div>
+      <div class="theme" role="group" aria-label="Color theme">
+        <button type="button" data-theme-set="auto" title="Follow your system setting">Auto</button>
+        <button type="button" data-theme-set="light">Light</button>
+        <button type="button" data-theme-set="dark">Dark</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" data-tab="scenario" aria-selected="true"><span class="step">1</span>EU consumption</button>
+      <button role="tab" data-tab="breakeven" aria-selected="false"><span class="step">2</span>Break-even</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button role="tab" data-tab="rates" aria-selected="false">Rate card</button>
+      <button role="tab" data-tab="rules" aria-selected="false">Billing rules</button>
+      <button role="tab" data-tab="json" aria-selected="false">Scenario file</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- TAB 1: EU consumption -->
+  <div id="tab-scenario" class="grid">
+    <div class="col">
+      <section class="panel">
+        <div class="panel-head"><h2>Organization</h2><span class="hint">Sets free allocation and seat type</span></div>
+        <div class="fields">
+          <label class="f">License model<select id="licenseModel"><option value="named">Named</option><option value="concurrent">Concurrent</option></select></label>
+          <label class="f">License<select id="license"><option>CX1</option><option>CX2</option><option selected>CX3</option><option>CX4</option></select></label>
+          <label class="f">Agents (billable users)<input id="agents" type="number" min="0" step="1"></label>
+          <label class="f" title="IVR fair use is pooled on billable users, the greater of your commit or actual. Leave blank to use Agents.">Fair-use users (override)<input id="ivrUsers" type="number" min="0" step="1" placeholder="= agents"></label>
+          <label class="f">Currency<select id="currency"></select></label>
+          <label class="f">Price per EU (override)<input id="price" type="number" min="0" step="0.01" placeholder="list price"></label>
+          <label class="f" title="Percent off the per-EU price, for example a negotiated prepaid discount. Does not apply to IVR overage.">EU cost discount (%)<input id="discount" type="number" min="0" max="100" step="0.5"></label>
+          <label class="f" title="Charged per IVR minute once the pooled fair-use minutes run out. Not EUs."><span>IVR rate / min after fair use (<span id="ivrCur">USD</span>)</span><input id="ivrRate" type="number" min="0" step="0.001"></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Self-service use cases</h2><span class="hint">Each row is one path an interaction can take. It's billed only at the highest tier it touches. Rows that reach Bot, VA or AVA carry over to the Break-even tab.</span></div>
+        <div class="ladder" id="ladder"></div>
+        <div id="channels"></div>
+        <div id="tierTotals" class="tier-totals" aria-live="polite"></div>
+      </section>
+
+      <div class="pair">
+      <section class="panel">
+        <div class="panel-head"><h2>Fixed elements</h2><span class="hint">EUs per user per month, regardless of use</span></div>
+        <div class="tbl-wrap"><table id="fixedTbl"><thead><tr><th>Element</th><th class="num">EU / user</th><th class="num">Users</th><th class="num">EU / month</th></tr></thead><tbody></tbody></table></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Other usage elements</h2><span class="hint">Monthly volumes</span></div>
+        <div class="tbl-wrap"><table id="usageTbl"><thead><tr><th>Element</th><th>Rate</th><th class="num">Volume / month</th><th class="num">EU / month</th></tr></thead><tbody></tbody></table></div>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="summaryWaive"> Treat AI Summary as covered when Agent Copilot is enabled</label>
+      </section>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <section class="panel">
+        <h3>This month</h3>
+        <div class="flow" id="flow"></div>
+        <div class="small" id="cost"></div>
+        <h3 style="margin-top:12px">What was consumed</h3>
+        <div class="bar" id="bar"></div>
+        <div class="legend" id="legend"></div>
+      </section>
+      <section class="panel">
+        <h3>Totals</h3>
+        <dl class="kv" id="kv"></dl>
+      </section>
+      <section class="panel">
+        <h3>IVR fair-use minutes</h3>
+        <div class="small" style="margin-top:2px">Not EUs. Counts all voice self-service time: IVR, bot, VA and AVA. Billed per minute in currency once the pool runs out.</div>
+        <div class="bar" id="ivrBar"></div>
+        <dl class="kv" id="ivrKv"></dl>
+      </section>
+      <section class="panel prose">
+        <h3>In plain words</h3>
+        <div id="narrative"></div>
+        <div class="row-actions"><button class="btn hot" data-goto="breakeven">Next: does it pay off? →</button></div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- TAB 2: Break-even -->
+  <div id="tab-breakeven" class="grid" hidden>
+    <div class="col">
+      <section class="panel">
+        <div class="panel-head"><h2>Break-even by use case</h2><span class="hint">Every use case from tab 1 that reaches Bot, VA or AVA. Set how long an agent would take on it and how much of it the AI should contain.</span></div>
+        <div class="tbl-wrap"><table class="uc" id="ucTbl">
+          <thead><tr>
+            <th>Use case</th>
+            <th class="num">Interactions<div class="sub-h">per month</div></th>
+            <th class="num" title="EU per interaction × effective EU price, plus this path's share of any IVR overage. Charged on every interaction that enters the tier, contained or not.">AI cost<div class="sub-h">per interaction</div></th>
+            <th class="num" title="Minutes an agent would spend on one interaction of this use case. For digital, the agent's cost is divided by chat concurrency.">Agent handle<div class="sub-h">minutes</div></th>
+            <th class="num" title="Agent cost of one interaction: handle minutes × agent cost per handle hour (÷ concurrency for digital).">Agent cost<div class="sub-h">per interaction</div></th>
+            <th class="num" title="Share of this use case's interactions the AI resolves with no agent.">Target<div class="sub-h">containment %</div></th>
+            <th>Break-even vs target</th>
+            <th class="num">Net / month<div class="sub-h">agent hr · <span class="cur">USD</span></div></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <div class="keyrow"><span><i style="background:var(--good)"></i>Target, at or above break-even</span><span><i style="background:var(--warn)"></i>Target, below break-even</span><span><i class="be"></i>Break-even</span></div>
+        <div id="ucEmpty" class="infobox" hidden>No use case reaches Bot, VA or AVA yet. Go to <a href="#" data-goto="scenario">EU consumption</a> and turn on an AI tier for at least one path with volume.</div>
+        <div id="ucExcluded" class="small" style="margin-top:8px"></div>
+      </section>
+
+      <div class="pair">
+        <section class="panel">
+          <div class="panel-head"><h2>Agent cost and time</h2><span class="hint">Shared by every use case</span></div>
+          <div class="fields">
+            <label class="f"><span>Agent cost / FTE / month (<span class="cur">USD</span>)</span><input type="number" min="0" step="100" data-be="costPerFTE"></label>
+            <label class="f">Paid hours / FTE / month<input type="number" min="0" step="1" data-be="paidHours"></label>
+            <label class="f" title="Breaks, training, meetings, coaching and time off.">Shrinkage %<input type="number" min="0" max="100" step="1" data-be="shrink"></label>
+            <label class="f" title="Share of available time spent handling interactions. Industry standard is 75–85%.">Occupancy %<input type="number" min="0" max="100" step="1" data-be="occ"></label>
+            <label class="f" title="Digital interactions one agent handles at the same time.">Chat concurrency<input type="number" min="1" step="0.5" data-be="concurrency"></label>
+          </div>
+          <dl class="kv" id="laborKv" style="margin-top:12px"></dl>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2>Program costs and rollout</h2><span class="hint">Counted in the blended view, not per use case</span></div>
+          <div class="fields">
+            <label class="f" title="Other AI or platform fees that are not EUs.">Platform fee / month<input type="number" min="0" step="100" data-be="platform"></label>
+            <label class="f">Implementation cost<input type="number" min="0" step="1000" data-be="impl"></label>
+            <label class="f" title="Spreads implementation over this many months in the monthly view.">Spread over (months)<input type="number" min="1" step="1" data-be="months"></label>
+            <label class="f" title="Months before go-live. No savings and no EU fees, but the platform fee runs.">Implementation time (months)<input type="number" min="0" max="12" step="1" data-be="implMonths"></label>
+            <label class="f">Years to show<input type="number" min="1" max="15" step="1" data-be="years"></label>
+            <label class="f" title="Points of containment each use case gains per year, capped at 100%.">Containment growth / year (pts)<input type="number" min="0" step="1" data-be="growth"></label>
+          </div>
+          <label class="chk" style="margin-top:10px"><input type="checkbox" data-be-chk="applyAllocation"> Let the free EU allocation lower the AI cost</label>
+          <label class="chk" style="margin-top:4px"><input type="checkbox" data-be-chk="wholeFTE"> Count only whole FTEs freed</label>
+        </section>
+      </div>
+
+      <section class="panel">
+        <details class="fold" id="yearsFold" open>
+          <summary><h2>Year by year</h2><span class="hint" id="yearsHint"></span></summary>
+          <div id="yearChart"></div>
+          <div class="tbl-wrap" style="margin-top:10px"><table id="yearTbl"><thead><tr><th>Year</th><th class="num">Months live</th><th class="num">Blended containment</th><th class="num">Net savings</th><th class="num">Cumulative</th></tr></thead><tbody></tbody></table></div>
+        </details>
+      </section>
+    </div>
+
+    <aside class="rail">
+      <section class="panel">
+        <h3>Whole program, at target</h3>
+        <div class="hero" style="margin-top:8px">
+          <div class="tile hot"><b id="kNet"></b><span id="kNetSub">net savings / month</span></div>
+          <div class="tile"><b id="kBE"></b><span>break-even containment, applied to every use case</span></div>
+          <div class="tile"><b id="kTgt"></b><span>blended target containment</span></div>
+          <div class="tile"><b id="kFte"></b><span>agent FTEs freed</span></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h3>Monthly savings build-up</h3>
+        <dl class="kv" id="beKv" style="margin-top:6px"></dl>
+      </section>
+      <section class="panel prose">
+        <h3>In plain words</h3>
+        <div id="beNarrative"></div>
+      </section>
+    </aside>
+  </div>
+
+  <div id="tab-rates" hidden>
+    <section class="panel">
+      <div class="panel-head"><h2>Rate card</h2><span class="hint">Every element that consumes EUs, with its source page</span></div>
+      <div class="tbl-wrap"><table id="rateTbl"><thead><tr><th>Element</th><th>Type</th><th>Group</th><th>Rate</th><th class="num">EU per unit</th><th>Notes</th><th>Source</th></tr></thead><tbody></tbody></table></div>
+    </section>
+  </div>
+
+  <div id="tab-rules" hidden>
+    <div class="col">
+      <section class="panel prose" id="rulesPanel"></section>
+      <section class="panel prose" id="beRules"></section>
+      <section class="panel prose" id="openQ"></section>
+    </div>
+  </div>
+
+  <div id="tab-json" hidden>
+    <section class="panel">
+      <div class="panel-head"><h2>Scenario file</h2><span class="hint">Both tabs in one JSON. The EU part is the same format the EU engine accepts; break-even inputs ride along as <code>breakEven</code> and each path's <code>be</code>.</span></div>
+      <textarea id="jsonBox" spellcheck="false"></textarea>
+      <div class="row-actions">
+        <button class="btn primary" id="copyJson">Copy scenario</button>
+        <button class="btn" id="downloadJson">Download .json</button>
+        <button class="btn" id="loadJson">Load from box</button>
+        <label class="btn" style="display:inline-flex;align-items:center">Open file…<input type="file" id="fileJson" accept=".json,application/json" hidden></label>
+        <button class="btn" id="resetJson">Reset to sample</button>
+        <span class="small" id="jsonMsg" role="status"></span>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const MODEL = {
+  "$schema": "./eu-model.schema.json",
+  "modelId": "genesys-cloud-eu",
+  "modelVersion": "1.0.0",
+  "asOf": "2026-11-16",
+  "status": "1.0 - all rules confirmed by Chad (2026-11-16)",
+  "sources": {
+    "eu-model": {
+      "title": "Genesys Cloud Experience Units model (metering details)",
+      "url": "https://help.genesys.cloud/articles/genesys-cloud-experience-units-model/",
+      "revised": "2026-11-06"
+    },
+    "billing-scenarios": {
+      "title": "AI resource consumption billing scenarios",
+      "url": "https://help.genesys.cloud/409622",
+      "revised": "2026-08-17"
+    },
+    "pricing-hub": {
+      "title": "Genesys Cloud pricing hub (Experience Units section)",
+      "url": "https://help.genesys.cloud/411767",
+      "revised": "2026-11-06"
+    },
+    "free-allocation": {
+      "title": "Genesys Cloud free allocation per organization",
+      "url": "https://help.genesys.cloud/413418",
+      "revised": "2026-11-06"
+    },
+    "copilot-actions": {
+      "title": "Genesys Cloud Copilot AI actions overview",
+      "url": "https://help.genesys.cloud/416587",
+      "revised": "2026-08-24"
+    },
+    "dut-faq": {
+      "title": "Can I use digital user tracking at no additional cost?",
+      "url": "https://help.genesys.cloud/405280",
+      "revised": "2025-12-08"
+    },
+    "fair-use": {
+      "title": "Genesys Cloud fair use policy",
+      "url": "https://help.genesys.cloud/articles/genesys-cloud-fair-use-policy/",
+      "revised": "2026-08-31"
+    }
+  },
+  "pricing": {
+    "unit": "EU",
+    "pricePerEU": {
+      "USD": 1.0,
+      "CAD": 1.1,
+      "AUD": 1.3,
+      "NZD": 1.4,
+      "GBP": 0.7,
+      "EUR": 0.8,
+      "BRL": 4.0,
+      "JPY": 120,
+      "ZAR": 14.2
+    },
+    "notes": "Standard month-to-month consumption price. Prepaid units are available at an unpublished discount; enter a negotiated rate as an override.",
+    "carryOver": false,
+    "source": "pricing-hub"
+  },
+  "allocations": [
+    {
+      "id": "org-free-named",
+      "name": "Free org allocation (named-user org)",
+      "appliesTo": {
+        "licenseModel": "named"
+      },
+      "eu": 250,
+      "per": "org-month",
+      "source": "free-allocation"
+    },
+    {
+      "id": "org-free-concurrent",
+      "name": "Free org allocation (concurrent-user org)",
+      "appliesTo": {
+        "licenseModel": "concurrent"
+      },
+      "eu": 350,
+      "per": "org-month",
+      "source": "free-allocation"
+    },
+    {
+      "id": "cx4-named",
+      "name": "CX 4 included units (named)",
+      "appliesTo": {
+        "licenseModel": "named",
+        "license": "CX4"
+      },
+      "eu": 30,
+      "per": "agent-month",
+      "source": "pricing-hub"
+    },
+    {
+      "id": "cx4-concurrent",
+      "name": "CX 4 included units (concurrent)",
+      "appliesTo": {
+        "licenseModel": "concurrent",
+        "license": "CX4"
+      },
+      "eu": 39,
+      "per": "agent-month",
+      "source": "pricing-hub"
+    }
+  ],
+  "selfServiceTiers": {
+    "description": "Voice and digital self-service resources an interaction can traverse. Per interaction (billing ID), only the highest-ranked tier visited is billed; lower tiers on the same interaction are not billed separately.",
+    "rule": "highest-tier-per-interaction",
+    "source": "billing-scenarios",
+    "tiers": [
+      {
+        "id": "ivr",
+        "rank": 0,
+        "name": "IVR (Architect inbound call / message flow)",
+        "eu": 0,
+        "basis": "none",
+        "notes": "0 EU. IVR time is not an EU charge, but it is billed in currency per minute once the org's pooled fair-use IVR minutes are used up (see fairUse.ivrMinutes). That charge applies on top of whatever tier the interaction is billed at.",
+        "source": "fair-use",
+        "confidence": "confirmed-by-chad"
+      },
+      {
+        "id": "bot",
+        "rank": 1,
+        "name": "Bot flow (Genesys Dialog Engine / Digital Bot Flow)",
+        "voice": {
+          "eu": 1,
+          "per": 17,
+          "unit": "minute",
+          "rounding": {
+            "increment": "15s",
+            "scope": "per-call",
+            "mode": "up"
+          }
+        },
+        "digital": {
+          "eu": 1,
+          "per": 51,
+          "unit": "session",
+          "sessionDefinition": {
+            "session": "The bot conversation container between the customer and the bot (Digital Bot Flow or Digital Bot Connector). Persists up to 72 hours or the configured session timeout, keeping context, slots and turn history across inactivity.",
+            "interaction": "The overall customer conversation (web messaging or SMS conversation ID) routed through inbound message flows, queues and agents. One interaction can hold more than one bot session.",
+            "reentry": "Re-entering a bot flow while the conversation is still open and within the session window continues the same session; it is not a new session.",
+            "newSessionWhen": [
+              "Session timeout or follow-up response timeout is reached",
+              "The bot flow exits with a disconnect or transfer that ends the session",
+              "A new inbound interaction starts after the previous conversation closed"
+            ],
+            "source": "confirmed-by-chad",
+            "confirmed": "2026-11-16"
+          }
+        },
+        "basis": "duration-or-session",
+        "source": "eu-model",
+        "confidence": "published"
+      },
+      {
+        "id": "va",
+        "rank": 2,
+        "name": "Virtual Agent (incl. agentic VA powered by Guides)",
+        "eu": 0.5,
+        "per": 1,
+        "unit": "interaction",
+        "basis": "interaction",
+        "source": "eu-model",
+        "confidence": "published"
+      },
+      {
+        "id": "ava",
+        "rank": 3,
+        "name": "Agentic Virtual Agent (powered by LAMs)",
+        "eu": 1.2,
+        "per": 1,
+        "unit": "interaction",
+        "basis": "interaction",
+        "triggers": "Charged as soon as the interaction enters a flow that contains an AVA block, even if the block never executes.",
+        "source": "billing-scenarios",
+        "confidence": "published"
+      }
+    ],
+    "interactionBoundary": {
+      "description": "One billing ID per interaction, any channel, any length. A billing ID can span several end-interaction events (e.g. inbound flow -> VA flow). Billing closes when an action ends it and no further transfer can occur.",
+      "endEvents": [
+        "Exit action (return to calling flow)",
+        "Disconnect action",
+        "Participant hangs up",
+        "Transfer to ACD action",
+        "Error-handling exit/disconnect",
+        "Recognition-failure exit/disconnect",
+        "Max No Input override exit/disconnect",
+        "Agent-escalation exit",
+        "Digital inactivity expiry (72h async timeout)"
+      ],
+      "source": "eu-model"
+    }
+  },
+  "elements": [
+    {
+      "id": "bots-voice",
+      "name": "Bots (Voice)",
+      "category": "usage",
+      "group": "self-service",
+      "tierRef": "bot",
+      "rate": {
+        "eu": 1,
+        "per": 17,
+        "unit": "minute"
+      },
+      "rounding": "each call up to next 15 seconds",
+      "source": "eu-model"
+    },
+    {
+      "id": "bots-digital",
+      "name": "Bots (Digital)",
+      "category": "usage",
+      "group": "self-service",
+      "tierRef": "bot",
+      "rate": {
+        "eu": 1,
+        "per": 51,
+        "unit": "session"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "virtual-agent",
+      "name": "Virtual Agent",
+      "category": "usage",
+      "group": "self-service",
+      "tierRef": "va",
+      "rate": {
+        "eu": 0.5,
+        "per": 1,
+        "unit": "interaction"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "agentic-virtual-agent",
+      "name": "Agentic Virtual Agent",
+      "category": "usage",
+      "group": "self-service",
+      "tierRef": "ava",
+      "rate": {
+        "eu": 1.2,
+        "per": 1,
+        "unit": "interaction"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "agent-copilot-named",
+      "name": "Agent Copilot (named)",
+      "category": "fixed",
+      "group": "agent-assist",
+      "rate": {
+        "eu": 40,
+        "per": 1,
+        "unit": "user-month"
+      },
+      "licenseModel": "named",
+      "source": "eu-model",
+      "notes": "Included automatically with CX 4. When enabled, Supervisor Copilot summaries/insights do not consume AI Summary EUs."
+    },
+    {
+      "id": "agent-copilot-concurrent",
+      "name": "Agent Copilot (concurrent)",
+      "category": "fixed",
+      "group": "agent-assist",
+      "rate": {
+        "eu": 60,
+        "per": 1,
+        "unit": "user-month"
+      },
+      "licenseModel": "concurrent",
+      "source": "eu-model"
+    },
+    {
+      "id": "sta-named",
+      "name": "Speech and Text Analytics add-on (named)",
+      "category": "fixed",
+      "group": "analytics",
+      "rate": {
+        "eu": 30,
+        "per": 1,
+        "unit": "user-month"
+      },
+      "licenseModel": "named",
+      "source": "eu-model"
+    },
+    {
+      "id": "sta-concurrent",
+      "name": "Speech and Text Analytics add-on (concurrent)",
+      "category": "fixed",
+      "group": "analytics",
+      "rate": {
+        "eu": 45,
+        "per": 1,
+        "unit": "user-month"
+      },
+      "licenseModel": "concurrent",
+      "source": "eu-model"
+    },
+    {
+      "id": "ai-scoring",
+      "name": "AI Scoring",
+      "category": "usage",
+      "group": "quality",
+      "rate": {
+        "eu": 1,
+        "per": 20,
+        "unit": "evaluation"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "ai-translate",
+      "name": "AI Translate",
+      "category": "usage",
+      "group": "agent-assist",
+      "rate": {
+        "eu": 1,
+        "per": 2,
+        "unit": "translation"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "ai-summary",
+      "name": "AI Summary and Insights",
+      "category": "usage",
+      "group": "agent-assist",
+      "rate": {
+        "eu": 1,
+        "per": 50,
+        "unit": "summary"
+      },
+      "source": "eu-model",
+      "waivedWhen": "agent-copilot enabled (Supervisor Copilot summaries ride on Agent Copilot)"
+    },
+    {
+      "id": "predictive-routing",
+      "name": "Predictive Routing",
+      "category": "usage",
+      "group": "routing",
+      "rate": {
+        "eu": 1,
+        "per": 17,
+        "unit": "routed interaction"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "gc-copilot",
+      "name": "Genesys Cloud Copilot (admin AI actions)",
+      "category": "usage",
+      "group": "admin",
+      "rate": {
+        "eu": 1,
+        "per": 20,
+        "unit": "AI action"
+      },
+      "source": "eu-model",
+      "notes": "Knowledge queries and utility actions are free. Multi-step tasks count each tool call (e.g. assign a role to 1 user = 3 actions).",
+      "detailSource": "copilot-actions"
+    },
+    {
+      "id": "msg-apple",
+      "name": "Apple Messages for Business",
+      "category": "usage",
+      "group": "messaging",
+      "rate": {
+        "eu": 1,
+        "per": 400,
+        "unit": "message (in+out)"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "msg-facebook",
+      "name": "Facebook Messenger",
+      "category": "usage",
+      "group": "messaging",
+      "rate": {
+        "eu": 1,
+        "per": 400,
+        "unit": "message (in+out)"
+      },
+      "source": "eu-model",
+      "notes": "Legacy per-conversation pricing if org has not moved to EU pricing."
+    },
+    {
+      "id": "msg-instagram",
+      "name": "Instagram Direct Messaging",
+      "category": "usage",
+      "group": "messaging",
+      "rate": {
+        "eu": 1,
+        "per": 400,
+        "unit": "message (in+out)"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "msg-whatsapp",
+      "name": "WhatsApp Messaging",
+      "category": "usage",
+      "group": "messaging",
+      "rate": {
+        "eu": 1,
+        "per": 400,
+        "unit": "message (in+out)"
+      },
+      "source": "eu-model",
+      "notes": "Meta per-message charges pass through separately."
+    },
+    {
+      "id": "msg-x",
+      "name": "X (Twitter) Direct Messaging",
+      "category": "usage",
+      "group": "messaging",
+      "rate": {
+        "eu": 1,
+        "per": 400,
+        "unit": "message (in+out)"
+      },
+      "source": "eu-model",
+      "notes": "X integration tier fees apply separately."
+    },
+    {
+      "id": "social-ingest",
+      "name": "Genesys Cloud Social (post ingestion)",
+      "category": "usage",
+      "group": "social",
+      "rate": {
+        "eu": 1,
+        "per": 400,
+        "unit": "post ingested per channel"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "social-responses",
+      "name": "Social Post Responses",
+      "category": "usage",
+      "group": "social",
+      "rate": {
+        "eu": 1,
+        "per": 400,
+        "unit": "outbound response per channel"
+      },
+      "source": "eu-model"
+    },
+    {
+      "id": "predictive-engagement",
+      "name": "Predictive Engagement / digital user tracking",
+      "category": "usage",
+      "group": "engagement",
+      "rate": {
+        "eu": 0,
+        "per": 1,
+        "unit": "event"
+      },
+      "source": "dut-faq",
+      "notes": "No EU charge for EU customers."
+    }
+  ],
+  "billingRules": [
+    {
+      "id": "R1",
+      "rule": "Self-service resources on one interaction are billed at the single highest tier visited, by tier rank (bot < VA < AVA), not by computed cost. A long bot call that later reaches AVA is billed 1.2 EU only.",
+      "source": "billing-scenarios",
+      "confidence": "confirmed-by-chad"
+    },
+    {
+      "id": "R2",
+      "rule": "AVA charge (1.2 EU) is triggered by entering a flow that contains an AVA block, not by executing it.",
+      "source": "billing-scenarios"
+    },
+    {
+      "id": "R3",
+      "rule": "Channel meters (messaging, social) are independent of the self-service tier and add on top (e.g. a WhatsApp conversation handled by a VA = 0.5 EU + 1 EU per 400 messages).",
+      "source": "eu-model",
+      "confidence": "confirmed-by-chad"
+    },
+    {
+      "id": "R4",
+      "rule": "Fixed (per-user) elements are billed per user per month regardless of usage.",
+      "source": "eu-model"
+    },
+    {
+      "id": "R5",
+      "rule": "Free/included allocations net against total monthly EUs; unused units expire monthly.",
+      "source": "eu-model"
+    },
+    {
+      "id": "R6",
+      "rule": "IVR minutes are not EUs. All self-service time on a voice call (IVR + bot + VA + AVA) accrues against the org's pooled fair-use IVR minutes; minutes beyond the pool are billed per minute in currency, independent of the EU tier.",
+      "source": "fair-use",
+      "confidence": "confirmed-by-chad"
+    },
+    {
+      "id": "R7",
+      "rule": "Every usage element may consume fractional EUs per unit or interaction; the monthly total is rounded up to the next whole EU. For self-service this is per tier (Bot, VA, AVA; voice + digital combined); for other usage elements (e.g. predictive routing, messaging) it is per element. Voice bot 15-second per-call time rounding still applies first.",
+      "source": "billing-scenarios",
+      "confidence": "confirmed-by-chad"
+    }
+  ],
+  "openQuestions": [],
+  "fairUse": {
+    "description": "Non-EU allowances that interact with self-service design. Pooled across the org each month (per billable user x per-user allowance), based on the greater of commit or actual users. No carry-over. Overage billed in currency, not EUs.",
+    "ivrMinutes": {
+      "name": "Basic routing / IVR minutes",
+      "measuredAs": "IVR minutes accrue for all self-service time on a voice call: IVR, bot, VA and AVA sessions. Modeled per path as one input, average total IVR minutes per call. In-queue flows are excluded.",
+      "perUserPerMonth": {
+        "named": {
+          "CX1": 1750,
+          "CX2": 2500,
+          "CX3": 3250,
+          "CX4": 4250,
+          "Communicate": 500
+        },
+        "concurrent": {
+          "CX1": 2275,
+          "CX2": 3250,
+          "CX3": 4225,
+          "CX4": 5525
+        }
+      },
+      "overagePerMinute": {
+        "USD": 0.01,
+        "CAD": 0.011,
+        "AUD": 0.013,
+        "NZD": 0.014,
+        "GBP": 0.007,
+        "EUR": 0.008,
+        "BRL": 0.04,
+        "JPY": 1.0,
+        "ZAR": 0.14
+      },
+      "invoiceCode": "PC-170-NV-PCIVRPERMIN",
+      "source": "fair-use",
+      "confidence": "allowances published; overage of USD 0.01 per minute confirmed by Chad 2026-11-16 (other currencies from the fair-use page summary)"
+    }
+  }
+}
+;
+const SAMPLE = {
+  "name": "Sample: 200-agent named CX 3 contact center",
+  "licenseModel": "named",
+  "license": "CX3",
+  "agents": 200,
+  "currency": "USD",
+  "ivrOverageRate": 0.01,
+  "fixed": {},
+  "usage": {},
+  "selfService": {
+    "voice": {
+      "interactions": 40000,
+      "paths": [
+        {
+          "name": "IVR only (menu, then queue)",
+          "share": 40,
+          "tiers": [
+            "ivr"
+          ],
+          "ivrMinutes": 1.5
+        },
+        {
+          "name": "IVR -> voice bot (contained)",
+          "share": 30,
+          "tiers": [
+            "ivr",
+            "bot"
+          ],
+          "botMinutes": 2.5,
+          "ivrMinutes": 3.25
+        },
+        {
+          "name": "IVR -> bot -> VA",
+          "share": 20,
+          "tiers": [
+            "ivr",
+            "bot",
+            "va"
+          ],
+          "botMinutes": 1.5,
+          "ivrMinutes": 5.25
+        },
+        {
+          "name": "IVR -> bot -> VA -> AVA",
+          "share": 10,
+          "tiers": [
+            "ivr",
+            "bot",
+            "va",
+            "ava"
+          ],
+          "ivrMinutes": 4.75
+        }
+      ]
+    },
+    "digital": {
+      "interactions": 15000,
+      "paths": [
+        {
+          "name": "Digital bot only",
+          "share": 60,
+          "tiers": [
+            "bot"
+          ],
+          "botSessions": 1
+        },
+        {
+          "name": "Bot -> VA",
+          "share": 30,
+          "tiers": [
+            "bot",
+            "va"
+          ]
+        },
+        {
+          "name": "Bot -> AVA",
+          "share": 10,
+          "tiers": [
+            "bot",
+            "ava"
+          ]
+        }
+      ]
+    }
+  }
+}
+;
+</script>
+<script>
+/*
+ * Genesys Cloud Experience Unit (EU) calculation engine - v1.0.0
+ * Pure, dependency-free. Works in the browser (window.EUEngine) and Node (require).
+ *
+ *   const { calculate } = require('./eu-engine.js');
+ *   const result = calculate(model, scenario);
+ *
+ * See MODEL.md for the scenario format and the billing rules this implements.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.EUEngine = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const round = (n, d = 4) => Math.round(n * 10 ** d) / 10 ** d;
+  const euPerUnit = (rate) => (rate.per ? rate.eu / rate.per : rate.eu);
+
+  function tierMap(model) {
+    const m = {};
+    model.selfServiceTiers.tiers.forEach((t) => (m[t.id] = t));
+    return m;
+  }
+
+  /** Highest-ranked tier among those an interaction visits (rule R1). */
+  function highestTier(model, tierIds) {
+    const tiers = tierMap(model);
+    return tierIds
+      .map((id) => tiers[id])
+      .filter(Boolean)
+      .reduce((best, t) => (!best || t.rank > best.rank ? t : best), null);
+  }
+
+  /** EUs for ONE interaction on a path. channel: 'voice' | 'digital'. */
+  function interactionEU(model, channel, path) {
+    const top = highestTier(model, path.tiers || []);
+    if (!top) return { tier: null, eu: 0 };
+    if (top.id === 'bot') {
+      if (channel === 'voice') {
+        // A call that reaches a bot is in it for at least one 15-second increment.
+        const entered = (path.botMinutes || 0) * 60;
+        const secs = Math.max(entered, 15);
+        const inc = 15; // per-call rounding up to next 15 s
+        const billedMin = (Math.ceil(secs / inc) * inc) / 60;
+        return { tier: top.id, eu: billedMin * euPerUnit(top.voice), billedMinutes: billedMin, minimumApplied: entered < 15 };
+      }
+      const given = path.botSessions == null ? 1 : path.botSessions;
+      const sessions = Math.max(given, 1); // reaching a digital bot is at least one session
+      return { tier: top.id, eu: sessions * euPerUnit(top.digital), minimumApplied: given < 1 };
+    }
+    return { tier: top.id, eu: euPerUnit(top) };
+  }
+
+  /** Expected EUs for a channel given a mix of paths (dynamic multi-path). */
+  function selfServiceEU(model, channel, cfg) {
+    if (!cfg || !cfg.interactions) return { eu: 0, paths: [], byTier: {}, byTierRaw: {} };
+    const totalShare = (cfg.paths || []).reduce((s, p) => s + (p.share || 0), 0) || 1;
+    const byTier = {};
+    const byTierRaw = {};
+    const paths = (cfg.paths || []).map((p) => {
+      const count = cfg.interactions * (p.share || 0) / totalShare;
+      const per = interactionEU(model, channel, p);
+      const eu = count * per.eu;
+      const key = per.tier || 'none';
+      byTier[key] = (byTier[key] || 0) + eu;
+      byTierRaw[key] = (byTierRaw[key] || 0) + eu;
+      return { name: p.name, tiers: p.tiers, interactions: round(count, 2), billedTier: per.tier, euPerInteraction: round(per.eu), eu: round(eu, 2), minimumApplied: !!per.minimumApplied };
+    });
+    const eu = paths.reduce((s, p) => s + p.eu, 0);
+    Object.keys(byTier).forEach((k) => (byTier[k] = round(byTier[k], 2)));
+    return { eu: round(eu, 2), paths, byTier, byTierRaw };
+  }
+
+  function allocation(model, scenario) {
+    let eu = 0;
+    const lines = [];
+    model.allocations.forEach((a) => {
+      const m = a.appliesTo || {};
+      if (m.licenseModel && m.licenseModel !== scenario.licenseModel) return;
+      if (m.license && m.license !== scenario.license) return;
+      const qty = a.per === 'agent-month' ? scenario.agents || 0 : 1;
+      const v = a.eu * qty;
+      eu += v;
+      lines.push({ id: a.id, name: a.name, eu: v });
+    });
+    return { eu, lines };
+  }
+
+  /**
+   * scenario = {
+   *   licenseModel: 'named'|'concurrent', license: 'CX3', agents: 100, currency: 'USD', pricePerEU?: number, euDiscountPct?: number (0-100),
+   *   fixed:  { '<elementId>': users },
+   *   usage:  { '<elementId>': units },          // non-self-service usage elements
+   *   selfService: { voice: { interactions, paths:[{name,share,tiers:[...],botMinutes}] },
+   *                  digital:{ interactions, paths:[{name,share,tiers:[...],botSessions}] } }
+   * }
+   */
+  function calculate(model, scenario) {
+    const lines = [];
+    const byId = {};
+    model.elements.forEach((e) => (byId[e.id] = e));
+
+    Object.entries(scenario.fixed || {}).forEach(([id, users]) => {
+      const e = byId[id];
+      if (!e || !users) return;
+      lines.push({ id, name: e.name, category: 'fixed', group: e.group, quantity: users, unit: e.rate.unit, eu: round(users * euPerUnit(e.rate), 2), source: e.source });
+    });
+
+    const copilotOn = Object.keys(scenario.fixed || {}).some((k) => k.startsWith('agent-copilot') && scenario.fixed[k] > 0);
+    Object.entries(scenario.usage || {}).forEach(([id, qty]) => {
+      const e = byId[id];
+      if (!e || !qty || e.tierRef) return;
+      let eu = qty * euPerUnit(e.rate);
+      let note;
+      if (id === 'ai-summary' && copilotOn && scenario.summaryCoveredByCopilot) { eu = 0; note = 'waived: Agent Copilot enabled'; }
+      // Rule R7: fractional per unit, monthly total per element rounded up to a whole EU.
+      const rawEU = round(eu, 4);
+      lines.push({ id, name: e.name, category: 'usage', group: e.group, quantity: qty, unit: e.rate.unit, eu: Math.ceil(round(eu, 6)), rawEU, note, source: e.source });
+    });
+
+    const ss = scenario.selfService || {};
+    const voice = selfServiceEU(model, 'voice', ss.voice);
+    const digital = selfServiceEU(model, 'digital', ss.digital);
+    // Rule R7: each interaction may consume a fraction of an EU; the monthly total for each
+    // tier (Bot, VA, AVA; voice + digital combined) is rounded up to the next whole EU.
+    const tierTotals = {};
+    ['bot', 'va', 'ava'].forEach((t) => {
+      const raw = (voice.byTierRaw[t] || 0) + (digital.byTierRaw[t] || 0);
+      const billed = Math.ceil(round(raw, 6));
+      const interactions = [voice, digital].reduce((n, c) => n + c.paths.filter((p) => p.billedTier === t).reduce((a, p) => a + p.interactions, 0), 0);
+      tierTotals[t] = { raw: round(raw, 4), billed, interactions: round(interactions, 0) };
+      if (billed) lines.push({ id: 'self-service-' + t, name: 'Self-service billed as ' + ({ bot: 'Bot', va: 'VA', ava: 'AVA' })[t], category: 'usage', group: 'self-service', quantity: tierTotals[t].interactions, unit: 'interaction', eu: billed, rawEU: tierTotals[t].raw, note: 'monthly total rounded up from ' + round(raw, 2), source: 'billing-scenarios' });
+    });
+
+    const gross = round(lines.reduce((s, l) => s + l.eu, 0), 2);
+    const alloc = allocation(model, scenario);
+    const net = Math.max(0, round(gross - alloc.eu, 2));
+    const currency = scenario.currency || 'USD';
+    const price = scenario.pricePerEU != null ? scenario.pricePerEU : model.pricing.pricePerEU[currency];
+    const fixedEU = round(lines.filter((l) => l.category === 'fixed').reduce((s, l) => s + l.eu, 0), 2);
+
+    const ivr = ivrFairUse(model, scenario, currency);
+    // EU cost discount (percent off the per-EU price, e.g. a negotiated prepaid discount).
+    const discountPct = Math.min(100, Math.max(0, +scenario.euDiscountPct || 0));
+    const euCostBeforeDiscount = round(net * price, 2);
+    const euDiscount = round(euCostBeforeDiscount * discountPct / 100, 2);
+    const euCost = round(euCostBeforeDiscount - euDiscount, 2);
+
+    return {
+      modelVersion: model.modelVersion,
+      lines,
+      selfService: { voice, digital, tierTotals },
+      ivr,
+      totals: { fixedEU, usageEU: round(gross - fixedEU, 2), grossEU: gross, allocationEU: alloc.eu, netEU: net, unusedAllocationEU: Math.max(0, round(alloc.eu - gross, 2)), currency, pricePerEU: price, discountPct, effectivePricePerEU: round(price * (1 - discountPct / 100), 4), euCostBeforeDiscount, euDiscount,
+        cost: euCost, ivrOverageCost: ivr ? ivr.overageCost : 0, totalCost: round(euCost + (ivr ? ivr.overageCost : 0), 2) },
+      allocation: alloc,
+    };
+  }
+
+  /**
+   * IVR minutes are not EUs (rule R6). They draw down a pooled fair-use allowance
+   * (per billable user x license), and minutes past it are billed per minute in currency.
+   * Per voice path, ivrMinutes is the average total self-service time per call (IVR + bot + VA + AVA).
+   */
+  /**
+   * Fair-use minutes for one call on a path. `ivrMinutes` is the average TOTAL self-service
+   * time per call (IVR + bot + VA + AVA); it is the only input to IVR fair use.
+   * `botMinutes` is separate and only sets the bot EU charge.
+   */
+  function fairUseMinutesPerCall(p) {
+    return (p.tiers || []).length ? p.ivrMinutes || 0 : 0;
+  }
+
+  function ivrFairUse(model, scenario, currency) {
+    const fu = model.fairUse && model.fairUse.ivrMinutes;
+    const v = scenario.selfService && scenario.selfService.voice;
+    if (!fu) return null;
+    let minutes = 0;
+    if (v && v.interactions) {
+      const totalShare = (v.paths || []).reduce((s, p) => s + (p.share || 0), 0) || 1;
+      (v.paths || []).forEach((p) => { minutes += v.interactions * (p.share || 0) / totalShare * fairUseMinutesPerCall(p); });
+    }
+    minutes += scenario.extraIvrMinutes || 0;
+    const perUser = ((fu.perUserPerMonth[scenario.licenseModel] || {})[scenario.license]) || 0;
+    const users = scenario.ivrBillableUsers != null ? scenario.ivrBillableUsers : (scenario.agents || 0);
+    const allowance = perUser * users;
+    const overageMinutes = Math.max(0, minutes - allowance);
+    const rate = scenario.ivrOverageRate != null ? scenario.ivrOverageRate : (fu.overagePerMinute[currency] || 0);
+    return { minutes: round(minutes, 0), perUser, users, allowance, overageMinutes: round(overageMinutes, 0),
+      usedPct: allowance ? round(minutes / allowance * 100, 1) : null, ratePerMinute: rate, overageCost: round(overageMinutes * rate, 2) };
+  }
+
+  return { calculate, interactionEU, highestTier, selfServiceEU, ivrFairUse, fairUseMinutesPerCall, euPerUnit };
+});
+
+</script>
+<script>
+/*
+ * Multi-use-case self-service break-even engine - v1.0.0
+ * Pure, dependency-free. Browser global `BEEngine`, or require() in Node.
+ *
+ * Takes the EU consumption scenario (same format as eu-engine.js) and the result of
+ * EUEngine.calculate(model, scenario), and works out, for every self-service path
+ * ("use case") that is billed at an AI tier (Bot, VA or AVA):
+ *   - the AI cost per interaction (EUs x effective price, plus its share of IVR overage),
+ *   - the agent cost per interaction it would otherwise take,
+ *   - the containment it needs to break even, and the savings at its target containment.
+ * It then adds the use cases up into a blended (program) view, including platform and
+ * implementation costs, and a year-by-year projection.
+ *
+ * Break-even inputs for each path live on the path itself, as `path.be`:
+ *   { aht: <agent handle minutes per interaction>, target: <containment % of the path's interactions> }
+ * Program-wide inputs live in `scenario.breakEven` (see DEFAULTS below).
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.BEEngine = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const DEFAULTS = {
+    costPerFTE: 7000,      // fully loaded agent cost per FTE per month
+    paidHours: 173,        // paid hours per FTE per month
+    shrink: 30,            // % of paid time lost to breaks, training, meetings, time off
+    occ: 80,               // % of available time spent handling interactions
+    concurrency: 2,        // digital interactions an agent handles at once
+    platform: 0,           // other AI platform fees per month (not EUs)
+    impl: 0,               // one-time implementation cost
+    months: 36,            // spread implementation over (months) for the run-rate view
+    implMonths: 3,         // months before go-live (no savings, no EU fees)
+    years: 5,
+    growth: 5,             // containment points added per year, per use case (capped at 100%)
+    applyAllocation: true,  // let the free EU allocation offset AI EUs (Chad, 2026-11-16: include it)
+    wholeFTE: false        // round FTEs saved down to whole people
+  };
+  const PATH_DEFAULTS = { voice: { aht: 10, target: 50 }, digital: { aht: 8, target: 50 } };
+  const AI_TIERS = ['bot', 'va', 'ava'];
+
+  const num = (v, d) => (v === '' || v == null || !isFinite(+v) ? d : +v);
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+  function settings(scenario) {
+    const s = Object.assign({}, DEFAULTS, (scenario && scenario.breakEven) || {});
+    Object.keys(DEFAULTS).forEach((k) => { if (typeof DEFAULTS[k] === 'number') s[k] = num(s[k], DEFAULTS[k]); });
+    return s;
+  }
+
+  function pathInputs(channel, p) {
+    const d = PATH_DEFAULTS[channel];
+    const be = (p && p.be) || {};
+    return { aht: Math.max(0, num(be.aht, d.aht)), target: clamp(num(be.target, d.target), 0, 100) };
+  }
+
+  /** Handle hours per FTE per month and the agent cost of one handle hour. */
+  function labor(s) {
+    const handleHours = s.paidHours * (1 - clamp(s.shrink, 0, 100) / 100) * (clamp(s.occ, 0, 100) / 100);
+    const perHour = handleHours > 0 ? s.costPerFTE / handleHours : 0;
+    return { handleHours, perHour };
+  }
+
+  /**
+   * analyze(scenario, euResult) -> { settings, labor, useCases, excluded, program, years }
+   * euResult = EUEngine.calculate(model, scenario)
+   */
+  function analyze(scenario, euResult) {
+    const s = settings(scenario);
+    const L = labor(s);
+    const T = euResult.totals;
+    const price = T.effectivePricePerEU != null ? T.effectivePricePerEU : T.pricePerEU;
+    // With the allocation applied, each AI EU costs net/gross of its price.
+    const allocFactor = s.applyAllocation && T.grossEU > 0 ? T.netEU / T.grossEU : 1;
+    const euPrice = price * allocFactor;
+
+    // IVR overage is shared across voice paths by their fair-use minutes.
+    const ivr = euResult.ivr;
+    const voiceCfg = (scenario.selfService && scenario.selfService.voice) || {};
+    const overageCost = ivr ? ivr.overageCost : 0;
+    const totalMin = ivr ? ivr.minutes : 0;
+
+    const useCases = [], excluded = [];
+    ['voice', 'digital'].forEach((ch) => {
+      const cfg = (scenario.selfService && scenario.selfService[ch]) || { paths: [] };
+      const res = euResult.selfService[ch];
+      (cfg.paths || []).forEach((p, i) => {
+        const r = res && res.paths[i];
+        if (!r) return;
+        const base = { channel: ch, index: i, name: p.name || '(unnamed)', tiers: p.tiers || [], billedTier: r.billedTier, interactions: r.interactions };
+        if (!AI_TIERS.includes(r.billedTier) || !(r.interactions > 0)) { excluded.push(Object.assign(base, { reason: !AI_TIERS.includes(r.billedTier) ? 'no AI tier' : 'no volume' })); return; }
+        const inp = pathInputs(ch, p);
+        const N = r.interactions;
+        const euCost = r.euPerInteraction * euPrice;
+        let ivrCost = 0;
+        if (ch === 'voice' && overageCost > 0 && totalMin > 0) {
+          const pathMin = N * (p.tiers && p.tiers.length ? (p.ivrMinutes || 0) : 0);
+          ivrCost = overageCost * (pathMin / totalMin) / N;
+        }
+        const aiCost = euCost + ivrCost;
+        const conc = ch === 'digital' ? Math.max(1, s.concurrency) : 1;
+        const agentHoursPer = inp.aht / 60 / conc;     // agent hours one interaction takes
+        const agentCost = agentHoursPer * L.perHour;   // agent cost of one interaction
+        const breakEven = agentCost > 0 ? aiCost / agentCost : Infinity; // share that must be contained
+        const at = (c) => {
+          const contained = N * c;
+          const hours = contained * agentHoursPer;
+          return { containment: c, contained, hoursSaved: hours, laborSaved: hours * L.perHour, aiCost: N * aiCost, net: hours * L.perHour - N * aiCost };
+        };
+        const tgt = at(inp.target / 100);
+        useCases.push(Object.assign(base, {
+          aht: inp.aht, target: inp.target, euPerInteraction: r.euPerInteraction, euCost, ivrCost, aiCost, agentHoursPer, agentCost,
+          breakEven, breakEvenPct: isFinite(breakEven) ? breakEven * 100 : null, reachable: breakEven <= 1,
+          monthly: tgt, headroomPts: isFinite(breakEven) ? inp.target - breakEven * 100 : null, at
+        }));
+      });
+    });
+
+    // Program (blended) view at each use case's target.
+    const fixedMonthly = s.platform + s.impl / Math.max(1, s.months);
+    const sum = (f) => useCases.reduce((a, u) => a + f(u), 0);
+    const laborSaved = sum((u) => u.monthly.laborSaved);
+    const aiCost = sum((u) => u.monthly.aiCost);
+    const hoursSaved = sum((u) => u.monthly.hoursSaved);
+    const interactions = sum((u) => u.interactions);
+    const contained = sum((u) => u.monthly.contained);
+    const net = laborSaved - aiCost - fixedMonthly;
+    const fteRaw = L.handleHours > 0 ? hoursSaved / L.handleHours : 0;
+    const potentialLabor = sum((u) => u.interactions * u.agentCost); // labor if every AI interaction were contained
+    // Uniform break-even: one containment rate applied to every use case at which the program pays for itself.
+    const uniform = potentialLabor > 0 ? (aiCost + fixedMonthly) / potentialLabor : Infinity;
+    const program = {
+      interactions, contained, blendedTarget: interactions ? (contained / interactions) * 100 : 0,
+      laborSaved, aiCost, euCost: sum((u) => u.interactions * u.euCost), ivrCost: sum((u) => u.interactions * u.ivrCost),
+      platform: s.platform, implMonthly: s.impl / Math.max(1, s.months), fixedMonthly,
+      net, hoursSaved, ftesSaved: s.wholeFTE ? Math.floor(fteRaw) : fteRaw, netHours: L.perHour > 0 ? net / L.perHour : 0,
+      uniformBreakEvenPct: isFinite(uniform) ? uniform * 100 : null, uniformReachable: uniform <= 1,
+      useCasesPaying: useCases.filter((u) => u.monthly.net >= 0).length,
+      euPrice, allocFactor, currency: T.currency
+    };
+
+    // Year by year: containment grows `growth` points a year per use case, capped at 100%.
+    const years = [];
+    let cum = 0;
+    for (let y = 1; y <= clamp(Math.round(s.years), 1, 15); y++) {
+      const monthsProd = y === 1 ? 12 - clamp(s.implMonths, 0, 12) : 12;
+      const monthly = useCases.reduce((a, u) => a + u.at(Math.min(100, u.target + s.growth * (y - 1)) / 100).net, 0) - s.platform;
+      const oneTime = y === 1 ? s.impl + clamp(s.implMonths, 0, 12) * s.platform : 0;
+      const net = monthsProd * monthly - oneTime;
+      cum += net;
+      years.push({ year: y, monthsProd, monthly, oneTime, net, cumulative: cum,
+        blended: interactions ? useCases.reduce((a, u) => a + u.interactions * Math.min(100, u.target + s.growth * (y - 1)), 0) / interactions : 0 });
+    }
+    const runMonthly = laborSaved - aiCost - s.platform; // before amortized implementation
+    program.paybackMonths = s.impl > 0 ? (runMonthly > 0 ? s.implMonths + s.impl / runMonthly : null) : (runMonthly > 0 ? s.implMonths : null);
+    program.cumulative = cum;
+
+    useCases.forEach((u) => delete u.at);
+    return { settings: s, labor: L, useCases, excluded, program, years };
+  }
+
+  return { analyze, labor, settings, pathInputs, DEFAULTS, PATH_DEFAULTS, AI_TIERS };
+});
+
+</script>
+<script>
+(function(){
+const E = window.EUEngine, B = window.BEEngine, M = MODEL;
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const fmt = (n, d=0) => Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtEU = n => fmt(n, n < 10 && n % 1 ? 2 : 0);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const TIERS = M.selfServiceTiers.tiers;
+const TIER_LABEL = {ivr:'IVR', bot:'Bot', va:'VA', ava:'AVA'};
+const els = Object.fromEntries(M.elements.map(e => [e.id, e]));
+const srcIcon = id => { const x = M.sources[id]; return x ? ` <a class="src" href="${x.url}" target="_blank" rel="noopener" title="Source: ${esc(x.title)}" aria-label="Source: ${esc(x.title)}">↗</a>` : ''; };
+const srcLink = id => { const s = M.sources[id]; return s ? `<a class="src" href="${s.url}" target="_blank" rel="noopener">${esc(s.title.split(' (')[0])} ↗</a>` : ''; };
+const rateText = r => r.per === 1 ? `${r.eu} EU per ${r.unit}` : `${r.eu} EU per ${fmt(r.per)} ${r.unit}`;
+const KEY = 'genesys-eu-analyzer-v1';
+
+function fresh(){ const s = JSON.parse(JSON.stringify(SAMPLE)); s.breakEven = Object.assign({}, B.DEFAULTS); return s; }
+let S = fresh();
+try { const saved = localStorage.getItem(KEY); if (saved) S = JSON.parse(saved); } catch(e){}
+S.breakEven = Object.assign({}, B.DEFAULTS, S.breakEven || {});
+let R = null, A = null;
+
+$('#ver').textContent = M.modelVersion; $('#asof').textContent = M.asOf;
+$('#currency').innerHTML = Object.keys(M.pricing.pricePerEU).map(c => `<option>${c}</option>`).join('');
+
+$('#ladder').innerHTML = TIERS.map(t => {
+  let r = t.id === 'ivr' ? 'No EU charge' : t.id === 'bot' ? `Voice 1 EU / 17 min · Digital 1 EU / 51 sessions` : `${t.eu} EU flat per interaction, any length`;
+  return `<div class="rung ${t.id}"><b>${TIER_LABEL[t.id]}</b><span>${r}</span></div>`;
+}).join('');
+
+/* ---------- Tab 1: EU consumption ---------- */
+function bindOrg(){
+  $('#licenseModel').value = S.licenseModel; $('#license').value = S.license; $('#agents').value = S.agents;
+  $('#currency').value = S.currency || 'USD'; $('#price').value = S.pricePerEU ?? ''; $('#discount').value = S.euDiscountPct ?? 0; showIvrRate(); $('#ivrUsers').value = S.ivrBillableUsers ?? ''; $('#summaryWaive').checked = !!S.summaryCoveredByCopilot;
+  bindBE();
+}
+const defaultIvrRate = () => (M.fairUse.ivrMinutes.overagePerMinute[S.currency || 'USD'] ?? 0);
+function showIvrRate(){ $('#ivrRate').value = S.ivrOverageRate ?? defaultIvrRate(); $('#ivrCur').textContent = S.currency || 'USD'; }
+['licenseModel','license','currency'].forEach(id => $('#'+id).addEventListener('change', e => { S[id] = e.target.value; if (id === 'currency') showIvrRate(); refresh(); }));
+$('#agents').addEventListener('input', e => { S.agents = +e.target.value || 0; refresh(false); });
+$('#discount').addEventListener('input', e => { const v = e.target.value; if (v === '' || +v === 0) delete S.euDiscountPct; else S.euDiscountPct = Math.min(100, Math.max(0, +v)); refresh(false); });
+$('#price').addEventListener('input', e => { const v = e.target.value; if (v === '') delete S.pricePerEU; else S.pricePerEU = +v; refresh(false); });
+$('#ivrUsers').addEventListener('input', e => { const v = e.target.value; if (v === '') delete S.ivrBillableUsers; else S.ivrBillableUsers = +v; refresh(false); });
+$('#ivrRate').addEventListener('input', e => { const v = e.target.value; if (v === '') delete S.ivrOverageRate; else S.ivrOverageRate = +v; refresh(false); });
+$('#ivrRate').addEventListener('change', e => { if (e.target.value === '') showIvrRate(); });
+$('#summaryWaive').addEventListener('change', e => { S.summaryCoveredByCopilot = e.target.checked; refresh(false); });
+
+function renderChannels(){
+  S.selfService = S.selfService || {};
+  $('#channels').innerHTML = ['voice','digital'].map(ch => {
+    const c = S.selfService[ch] = S.selfService[ch] || {interactions:0, paths:[]};
+    const unitHdr = ch === 'voice' ? 'Bot min' : 'Bot sessions';
+    const minCell = (p, show, key, label, dflt) => `<td class="num">${show ? `<input type="number" min="0" step="0.25" data-k="${key}" aria-label="${label}" value="${p[key] ?? dflt}">` : '<span class="dash" title="Path does not touch this tier">–</span>'}</td>`;
+    return `<div style="margin-top:14px">
+      <div class="panel-head" style="margin-bottom:6px"><h2 style="font-size:15px">${ch === 'voice' ? 'Voice' : 'Digital'}</h2>
+        <label class="f" style="flex-direction:row;align-items:center;gap:8px">Interactions / month <input type="number" min="0" data-ch="${ch}" data-k="interactions" value="${c.interactions}"></label></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Use case / path</th><th class="num">Share %</th><th>Tiers touched</th>${ch==='voice'?'<th class="num" title="Average total self-service time per call: IVR + bot + VA + AVA. Drives IVR fair use only; no EU charge.">Total IVR min<div class="sub-h">all self-service · fair use</div></th>':''}<th class="num"${ch==='voice'?' title="Minutes spent in the bot. Sets the bot EU charge when Bot is the highest tier."':' title="Bot sessions per interaction. Re-entering the bot while the conversation is still open continues the same session. A new session starts only after a session timeout, a disconnect or transfer that ends the session, or a new interaction after the old one closed."'}>${unitHdr}<div class="sub-h">${ch==='voice'?'bot EU charge':'per interaction · re-entry = same'}</div></th><th>Billed as</th><th class="num">EU / int.</th><th class="num" title="Fractional EUs for this path. The monthly total for each tier is rounded up once, in the tier totals below.">EU / month<div class="sub-h">before tier round-up</div></th>${ch==='voice'?'<th class="num">Fair-use min / mo</th>':''}<th></th></tr></thead>
+      <tbody>${c.paths.map((p,i) => `<tr data-ch="${ch}" data-i="${i}">
+        <td class="pathname"><input aria-label="Path name" data-k="name" value="${esc(p.name||'')}"></td>
+        <td class="num"><input type="number" min="0" max="100" data-k="share" value="${p.share}" style="width:64px"></td>
+        <td><div class="tiers">${TIERS.map(t => `<button class="tierbtn ${t.id} ${p.tiers.includes(t.id)?'on':''}" data-tier="${t.id}" aria-pressed="${p.tiers.includes(t.id)}">${TIER_LABEL[t.id]}</button>`).join('')}</div></td>
+        ${ch==='voice' ? minCell(p, p.tiers.length > 0, 'ivrMinutes', 'Average total IVR minutes per call', 0) : ''}
+        ${ch==='voice' ? minCell(p, p.tiers.includes('bot'), 'botMinutes', 'Bot minutes per call', 0) : minCell(p, p.tiers.includes('bot'), 'botSessions', 'Bot sessions per interaction', 1)}
+        <td class="billed"></td><td class="num per"></td><td class="num tot"></td>${ch==='voice'?'<td class="num fu"></td>':''}
+        <td><button class="btn x" data-del aria-label="Remove path">✕</button></td></tr>`).join('')}</tbody></table></div>
+      <div class="row-actions"><button class="btn" data-add="${ch}">Add path</button><span class="small share-check" data-ch="${ch}"></span></div>
+    </div>`;
+  }).join('');
+}
+$('#channels').addEventListener('input', e => {
+  const t = e.target; const ch = t.dataset.ch || t.closest('tr')?.dataset.ch; if (!ch) return;
+  const c = S.selfService[ch];
+  if (t.dataset.k === 'interactions') c.interactions = +t.value || 0;
+  else { const p = c.paths[+t.closest('tr').dataset.i]; p[t.dataset.k] = t.dataset.k === 'name' ? t.value : (+t.value || 0); }
+  refresh(false);
+});
+$('#channels').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.add) { S.selfService[b.dataset.add].paths.push({name:'New path', share:0, tiers:['ivr']}); refresh(); return; }
+  const tr = b.closest('tr'); if (!tr) return;
+  const c = S.selfService[tr.dataset.ch], i = +tr.dataset.i;
+  if (b.hasAttribute('data-del')) { c.paths.splice(i,1); refresh(); return; }
+  if (b.dataset.tier) { const p = c.paths[i]; const k = p.tiers.indexOf(b.dataset.tier); k >= 0 ? p.tiers.splice(k,1) : p.tiers.push(b.dataset.tier); refresh(); }
+});
+
+function renderFixed(){
+  const fx = M.elements.filter(e => e.category === 'fixed' && (!e.licenseModel || e.licenseModel === S.licenseModel));
+  S.fixed = S.fixed || {};
+  $('#fixedTbl tbody').innerHTML = fx.map(e => `<tr><td>${esc(e.name)}${srcIcon(e.source)}</td><td class="num">${e.rate.eu}</td>
+    <td class="num"><input type="number" min="0" data-fixed="${e.id}" value="${S.fixed[e.id]||0}"></td><td class="num" data-out="${e.id}"></td></tr>`).join('');
+}
+$('#fixedTbl').addEventListener('input', e => { S.fixed[e.target.dataset.fixed] = +e.target.value || 0; refresh(false); });
+
+function renderUsage(){
+  const us = M.elements.filter(e => e.category === 'usage' && !e.tierRef);
+  S.usage = S.usage || {};
+  $('#usageTbl tbody').innerHTML = us.map(e => `<tr><td>${esc(e.name)}${srcIcon(e.source)}</td><td class="small rate">${rateText(e.rate)}</td>
+    <td class="num"><input type="number" min="0" data-usage="${e.id}" value="${S.usage[e.id]||0}"></td><td class="num" data-out="${e.id}"></td></tr>`).join('');
+}
+$('#usageTbl').addEventListener('input', e => { S.usage[e.target.dataset.usage] = +e.target.value || 0; refresh(false); });
+
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const GROUP_COLORS = () => ({ fixed: cssVar('--fixed'), ivr: cssVar('--t-ivr'), bot: cssVar('--t-bot'), va: cssVar('--t-va'), ava: cssVar('--t-ava'), other: cssVar('--muted') });
+
+function renderEU(){
+  R.lines.forEach(l => { const td = document.querySelector(`[data-out="${l.id}"]`); if (td) { td.textContent = fmt(l.eu) + (l.id === 'ai-summary' && l.note ? ' *' : ''); td.title = l.rawEU != null && l.rawEU !== l.eu ? `${fmt(l.rawEU, 2)} EU, rounded up to ${fmt(l.eu)}` : ''; } });
+  $$('[data-out]').forEach(td => { if (!R.lines.find(l => l.id === td.dataset.out)) td.textContent = '0'; });
+  ['voice','digital'].forEach(ch => {
+    const res = R.selfService[ch];
+    $$(`#channels tr[data-ch="${ch}"]`).forEach(tr => {
+      const p = res.paths[+tr.dataset.i]; if (!p) return;
+      const sp = S.selfService[ch].paths[+tr.dataset.i];
+      tr.querySelector('.billed').innerHTML = (p.billedTier ? `<span class="chip ${p.billedTier}">${TIER_LABEL[p.billedTier]}</span>` : '<span class="chip none">none</span>')
+        + (p.minimumApplied ? `<div class="small bad" style="max-width:170px">${ch === 'voice' ? 'Bot minutes are 0, so the 15-second minimum is charged. Enter bot minutes per call.' : 'Bot sessions are 0, so 1 session is charged.'}</div>` : '')
+        + (ch === 'voice' && sp.tiers.includes('bot') && (sp.botMinutes || 0) > (sp.ivrMinutes || 0) ? `<div class="small bad" style="max-width:170px">Bot minutes are more than total IVR minutes. Bot time is part of the total.</div>` : '');
+      const fu = tr.querySelector('.fu');
+      if (fu) fu.textContent = fmt(p.interactions * E.fairUseMinutesPerCall(sp));
+      tr.querySelector('.per').textContent = p.euPerInteraction.toFixed(p.euPerInteraction && p.euPerInteraction < 1 ? 3 : 2);
+      tr.querySelector('.tot').textContent = fmtEU(p.eu);
+      tr.querySelectorAll('.tierbtn').forEach(b => b.classList.toggle('billed', b.dataset.tier === p.billedTier && b.classList.contains('on')));
+    });
+    const sum = (S.selfService[ch].paths||[]).reduce((s,p) => s + (+p.share||0), 0);
+    const el = document.querySelector(`.share-check[data-ch="${ch}"]`);
+    if (el) el.innerHTML = Math.abs(sum - 100) < 0.01 || !S.selfService[ch].paths.length ? `<span class="ok">Shares total 100%</span>` : `<span class="bad">Shares total ${fmt(sum,1)}%. They are scaled to 100%.</span>`;
+  });
+
+  const T = R.totals;
+  const allocUsed = Math.min(T.allocationEU, T.grossEU);
+  $('#flow').innerHTML = `<div class="fig"><b>${fmt(T.grossEU)}</b><span>EU consumed</span></div><div class="op">−</div>
+    <div class="fig"><b>${fmt(allocUsed)}</b><span>free (of ${fmt(T.allocationEU)})</span></div><div class="op">=</div>
+    <div class="fig net"><b>${fmt(T.netEU)}</b><span>EU billable</span></div>`;
+  $('#cost').textContent = `Billable ≈ ${fmt(T.cost, 2)} ${T.currency} at ${T.pricePerEU} per EU` + (S.pricePerEU != null ? ' (override)' : ' (list)') + (T.discountPct ? ` less ${+T.discountPct.toFixed(2)}% discount = ${+T.effectivePricePerEU.toFixed(4)} per EU` : '') + (T.unusedAllocationEU ? `. ${fmt(T.unusedAllocationEU)} free EU unused this month (no carry-over).` : '');
+  $('#kv').innerHTML = `<dt>Fixed elements</dt><dd>${fmt(T.fixedEU,1)}</dd><dt>Usage elements</dt><dd>${fmt(T.usageEU,1)}</dd>
+    <dt class="sum">Gross</dt><dd class="sum">${fmt(T.grossEU,1)}</dd>
+    ${R.allocation.lines.map(a => `<dt>− ${esc(a.name)}</dt><dd>${fmt(a.eu)}</dd>`).join('')}
+    <dt class="sum">Net billable</dt><dd class="sum">${fmt(T.netEU,1)}</dd>
+    ${T.discountPct ? `<dt>EU cost before discount</dt><dd>${fmt(T.euCostBeforeDiscount,2)}</dd><dt>− Discount (${+T.discountPct.toFixed(2)}%)</dt><dd>${fmt(T.euDiscount,2)}</dd>` : ''}<dt>EU cost</dt><dd>${fmt(T.cost,2)}</dd><dt>IVR overage cost</dt><dd>${fmt(T.ivrOverageCost,2)}</dd>
+    <dt class="sum">Total ${T.currency}</dt><dd class="sum">${fmt(T.totalCost,2)}</dd>
+    ${T.unusedAllocationEU ? `<dt>Unused allocation (expires)</dt><dd>${fmt(T.unusedAllocationEU)}</dd>` : ''}`;
+
+  const I = R.ivr;
+  if (I) {
+    const pct = I.allowance ? Math.min(100, I.minutes / I.allowance * 100) : (I.minutes ? 100 : 0);
+    const over = I.overageMinutes > 0;
+    $('#ivrBar').innerHTML = `<i style="width:${pct}%;background:${over ? 'var(--warn)' : 'var(--t-ivr)'}"></i>`;
+    $('#ivrKv').innerHTML = `<dt>IVR minutes this month</dt><dd>${fmt(I.minutes)}</dd>
+      <dt>Pool (${fmt(I.users)} ${S.licenseModel} ${S.license} users × ${fmt(I.perUser)})</dt><dd>${fmt(I.allowance)}</dd>
+      <dt>Pool used</dt><dd class="${over ? 'bad' : 'ok'}">${I.usedPct == null ? 'n/a' : fmt(I.usedPct,1) + '%'}</dd>
+      <dt>Overage minutes</dt><dd>${fmt(I.overageMinutes)}</dd>
+      <dt class="sum">Overage cost</dt><dd class="sum">${fmt(I.overageCost,2)} ${T.currency}</dd>`;
+  }
+
+  const C = GROUP_COLORS();
+  const seg = [{k:'Fixed (per user)', v:T.fixedEU, c:C.fixed}];
+  ['bot','va','ava'].forEach(t => seg.push({k:`Self-service billed as ${TIER_LABEL[t]}`, v:R.selfService.tierTotals[t].billed, c:C[t]}));
+  const other = R.lines.filter(l => l.category==='usage' && l.group !== 'self-service').reduce((s,l)=>s+l.eu,0);
+  seg.push({k:'Other usage', v:other, c:C.other});
+  const g = T.grossEU || 1;
+  $('#bar').innerHTML = seg.filter(s => s.v > 0).map(s => `<i style="width:${s.v/g*100}%;background:${s.c}" title="${s.k}: ${fmt(s.v)} EU"></i>`).join('');
+  $('#legend').innerHTML = seg.map(s => `<div><s style="background:${s.c}"></s><span>${s.k}</span><em>${fmt(s.v)} · ${fmt(s.v/g*100,0)}%</em></div>`).join('');
+
+  $('#tierTotals').innerHTML = `<span class="small">Monthly tier totals, voice + digital, rounded up to whole EUs:</span>` + ['bot','va','ava'].map(t => `<span><span class="chip ${t}">${TIER_LABEL[t]}</span> ${fmt(R.selfService.tierTotals[t].raw, 2)} → <b>${fmt(R.selfService.tierTotals[t].billed)}</b> EU</span>`).join('');
+
+  const top = [...R.lines].sort((a,b)=>b.eu-a.eu)[0];
+  const ssInt = (S.selfService.voice?.interactions||0) + (S.selfService.digital?.interactions||0);
+  const TT = R.selfService.tierTotals;
+  const ssEU = TT.bot.billed + TT.va.billed + TT.ava.billed;
+  const avaShare = TT.ava.billed / (ssEU||1) * 100;
+  $('#narrative').innerHTML = `
+    <p>This ${S.licenseModel} ${S.license} org of ${fmt(S.agents)} agents uses about <b>${fmt(T.grossEU)} EU</b> a month. The free allocation covers ${fmt(Math.min(T.allocationEU,T.grossEU))} of them, leaving <b>${fmt(T.netEU)} EU</b> (≈ ${fmt(T.cost,2)} ${T.currency}) to pay for.</p>
+    <p>Fixed per-user elements are ${fmt(T.fixedEU)} EU (${fmt(T.fixedEU/g*100)}%) and do not move with volume. The largest single line is ${top ? `${esc(top.name)} at ${fmt(top.eu)} EU` : 'none'}.</p>
+    ${ssInt ? `<p>Self-service handles ${fmt(ssInt)} interactions for ${fmt(ssEU)} EU, an average of ${(ssEU/ssInt).toFixed(3)} EU each. ${avaShare > 0 ? `Paths that reach an AVA make up ${fmt(avaShare)}% of that cost, because any interaction that enters an AVA flow is billed 1.2 EU no matter what else it touched.` : ''}</p>` : ''}
+    ${I ? `<p>Voice self-service uses about ${fmt(I.minutes)} fair-use minutes, ${I.usedPct == null ? 'with no fair-use pool for this license' : fmt(I.usedPct,1) + '% of the pooled ' + fmt(I.allowance) + '-minute allowance'}. ${I.overageMinutes ? `The ${fmt(I.overageMinutes)} minutes over the pool add ${fmt(I.overageCost,2)} ${T.currency}, billed outside EUs.` : 'Nothing is billed for IVR time at this volume.'}</p>` : ''}`;
+}
+
+/* ---------- Tab 2: Break-even ---------- */
+const money = (n, d=0) => (n < 0 ? '−' : '') + fmt(Math.abs(n), d);
+const hrs = n => (n < 0 ? '−' : '') + fmt(Math.abs(n)) + ' hr';
+const pct = (n, d=1) => n == null ? 'n/a' : fmt(n, d) + '%';
+function bindBE(){
+  $$('[data-be]').forEach(i => i.value = S.breakEven[i.dataset.be] ?? '');
+  $$('[data-be-chk]').forEach(i => i.checked = !!S.breakEven[i.dataset.beChk]);
+}
+$('#tab-breakeven').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.be) { S.breakEven[t.dataset.be] = t.value === '' ? B.DEFAULTS[t.dataset.be] : +t.value; refresh(false); return; }
+  if (t.dataset.beChk) { S.breakEven[t.dataset.beChk] = t.checked; refresh(false); return; }
+  if (t.dataset.uc) {
+    const [ch, i] = t.closest('tr').dataset.p.split(':');
+    const p = S.selfService[ch].paths[+i]; p.be = p.be || {};
+    p.be[t.dataset.uc] = t.value === '' ? undefined : +t.value;
+    refresh(false);
+  }
+});
+$('#tab-breakeven').addEventListener('change', e => { if (e.target.dataset.be && e.target.value === '') bindBE(); });
+
+let ucSig = '';
+function renderBE(){
+  const cur = R.totals.currency;
+  $$('.cur').forEach(x => x.textContent = cur);
+  const sig = A.useCases.map(u => u.channel + u.index + u.billedTier).join('|');
+  const tbody = $('#ucTbl tbody');
+  if (sig !== ucSig || !tbody.children.length) {
+    ucSig = sig;
+    tbody.innerHTML = A.useCases.map(u => `<tr data-p="${u.channel}:${u.index}">
+      <td class="nm"><span class="ucname"></span><div class="small"><span class="chip ch">${u.channel === 'voice' ? 'Voice' : 'Digital'}</span><span class="chip ${u.billedTier}">${TIER_LABEL[u.billedTier]}</span></div></td>
+      <td class="num vol"></td><td class="num ai"></td>
+      <td class="num"><input type="number" min="0" step="0.5" data-uc="aht" aria-label="Agent handle minutes"></td>
+      <td class="num ag"></td>
+      <td class="num"><input type="number" min="0" max="100" step="1" data-uc="target" aria-label="Target containment %"></td>
+      <td class="trk"></td><td class="num net"></td></tr>`).join('');
+  }
+  A.useCases.forEach(u => {
+    const tr = tbody.querySelector(`tr[data-p="${u.channel}:${u.index}"]`); if (!tr) return;
+    tr.querySelector('.ucname').textContent = u.name;
+    tr.querySelector('.vol').textContent = fmt(u.interactions);
+    tr.querySelector('.ai').innerHTML = money(u.aiCost, 3) + (u.ivrCost > 0 ? `<div class="small" title="Share of IVR overage">incl. ${money(u.ivrCost,3)} IVR</div>` : '');
+    tr.querySelector('.ag').textContent = money(u.agentCost, 2);
+    ['aht','target'].forEach(k => { const inp = tr.querySelector(`[data-uc="${k}"]`); if (document.activeElement !== inp) inp.value = +u[k].toFixed(2); });
+    const be = u.breakEvenPct, ok = be != null && u.target >= be;
+    const verdict = be == null || be > 100 ? `<span class="verdict never">Can't break even: the AI costs more than the agent</span>`
+      : ok ? `<span class="verdict ok">Pays off at ${pct(be)} (${fmt(u.target - be,1)} pts headroom)</span>`
+      : `<span class="verdict short">Needs ${pct(be)}, ${fmt(be - u.target,1)} pts more</span>`;
+    tr.querySelector('.trk').innerHTML = `<div class="track" data-tipuc="${u.channel}:${u.index}"><div class="fill ${ok ? 'ok' : 'short'}" style="width:${u.target}%"></div>${be != null && be <= 100 ? `<div class="be" style="left:calc(${be}% - 1px)"></div>` : ''}</div>
+      <div class="track-l">${verdict}</div>`;
+    tr.querySelector('.net').innerHTML = `<span style="color:${u.monthly.net >= 0 ? 'var(--good)' : 'var(--warn)'}">${hrs(u.monthly.net / (A.labor.perHour || 1))}</span><div class="small">${money(u.monthly.net)}</div>`;
+  });
+  $('#ucEmpty').hidden = A.useCases.length > 0;
+  $('#ucExcluded').innerHTML = A.excluded.length ? 'Not in break-even (no AI tier or no volume): ' + A.excluded.map(x => `${esc(x.name)} <span class="chip ch">${x.channel === 'voice' ? 'Voice' : 'Digital'}</span>`).join(', ') + '.' : '';
+
+  const L = A.labor, P = A.program, s = A.settings;
+  $('#laborKv').innerHTML = `<dt>Handle hours / FTE / month</dt><dd>${fmt(L.handleHours,1)}</dd><dt>Agent cost / handle hour</dt><dd>${money(L.perHour,2)} ${cur}</dd>
+    <dt>Price per AI EU used here</dt><dd>${money(P.euPrice,4)} ${cur}</dd>`;
+
+  $('#kNet').innerHTML = hrs(P.netHours) + `<span class="usd">${money(P.net)} ${cur}</span>`;
+  $('#kNet').style.color = P.net >= 0 ? '' : 'var(--warn)';
+  $('#kBE').textContent = P.uniformBreakEvenPct == null ? 'n/a' : P.uniformReachable ? pct(P.uniformBreakEvenPct) : 'Not reachable';
+  $('#kTgt').textContent = pct(P.blendedTarget);
+  $('#kFte').textContent = fmt(P.ftesSaved, s.wholeFTE ? 0 : 1);
+  const h = n => `${hrs(n / (L.perHour || 1))}<span class="usd">${money(n)}</span>`;
+  $('#beKv').innerHTML = `<dt>Agent labor saved</dt><dd>${h(P.laborSaved)}</dd>
+    <dt>− AI EU cost</dt><dd>${h(-P.euCost)}</dd>
+    ${P.ivrCost ? `<dt>− IVR overage share</dt><dd>${h(-P.ivrCost)}</dd>` : ''}
+    ${P.platform ? `<dt>− Platform fee</dt><dd>${h(-P.platform)}</dd>` : ''}
+    ${P.implMonthly ? `<dt>− Implementation ÷ ${fmt(s.months)} mo</dt><dd>${h(-P.implMonthly)}</dd>` : ''}
+    <dt class="sum">Net savings / month</dt><dd class="sum">${h(P.net)}</dd>
+    <dt>Agent hours automated</dt><dd>${fmt(P.hoursSaved)} hr</dd>
+    <dt>Payback</dt><dd>${P.paybackMonths == null ? 'never' : fmt(P.paybackMonths,1) + ' mo'}</dd>`;
+
+  const paying = A.useCases.filter(u => u.monthly.net >= 0), losing = A.useCases.filter(u => u.monthly.net < 0);
+  const best = [...A.useCases].sort((a,b) => b.monthly.net - a.monthly.net)[0];
+  const tightest = [...A.useCases].filter(u => u.breakEvenPct != null).sort((a,b) => b.breakEvenPct - a.breakEvenPct)[0];
+  $('#beNarrative').innerHTML = !A.useCases.length ? '<p>Add a use case that reaches Bot, VA or AVA on the EU consumption tab to see break-even.</p>' : `
+    <p>Across ${A.useCases.length} AI use case${A.useCases.length === 1 ? '' : 's'} and ${fmt(P.interactions)} interactions a month, containing ${pct(P.blendedTarget)} of them saves <b>${fmt(P.hoursSaved)} agent hours</b> and nets <b>${money(P.net)} ${cur}</b> a month after AI costs.</p>
+    <p>${P.uniformReachable ? `The program breaks even if every use case contains at least <b>${pct(P.uniformBreakEvenPct)}</b> of its interactions.` : `Even at 100% containment the program costs more than it saves.`} ${paying.length === A.useCases.length ? 'Every use case pays for itself at its target.' : `${paying.length} of ${A.useCases.length} use cases pay for themselves at target; ${losing.map(u => esc(u.name)).join(', ')} ${losing.length === 1 ? 'does' : 'do'} not.`}</p>
+    ${best ? `<p>The biggest contributor is ${esc(best.name)} at ${money(best.monthly.net)} ${cur} a month. ${tightest && tightest !== best ? `The hardest to justify is ${esc(tightest.name)}, which needs ${pct(tightest.breakEvenPct)} containment because ${tightest.billedTier === 'ava' ? 'AVA is billed 1.2 EU on every interaction that enters it' : 'its AI cost is high relative to its handle time'}.` : ''}</p>` : ''}
+    <p>Over ${A.years.length} year${A.years.length === 1 ? '' : 's'}, with ${fmt(s.growth)} pts more containment a year, cumulative net savings come to <b>${money(P.cumulative)} ${cur}</b>.</p>`;
+
+  renderYears(cur);
+}
+
+function renderYears(cur){
+  const Y = A.years;
+  $('#yearsHint').textContent = `Year 1 has ${fmt(A.settings.implMonths)} months of implementation. Dollars, net of AI and program costs.`;
+  $('#yearTbl tbody').innerHTML = Y.map(y => `<tr><td>Year ${y.year}</td><td class="num">${y.monthsProd}</td><td class="num">${pct(y.blended)}</td><td class="num">${money(y.net)}</td><td class="num">${money(y.cumulative)}</td></tr>`).join('');
+  // Bars = each year's net savings, one series, one axis.
+  const W = 640, H = 220, padL = 64, padB = 26, padT = 10, padR = 8;
+  const vals = Y.map(y => y.net);
+  const hi = Math.max(0, ...vals), lo = Math.min(0, ...vals);
+  const span = niceStep((hi - lo) || 1);
+  const top = Math.ceil(hi / span) * span || span, bot = Math.floor(lo / span) * span;
+  const yS = v => padT + (top - v) / (top - bot) * (H - padT - padB);
+  const bw = (W - padL - padR) / Y.length;
+  let g = '';
+  for (let v = bot; v <= top + 1e-9; v += span) g += `<line x1="${padL}" x2="${W-padR}" y1="${yS(v)}" y2="${yS(v)}"/><text x="${padL-6}" y="${yS(v)+4}" text-anchor="end">${short(v)}</text>`;
+  const bars = Y.map((y, i) => {
+    const x = padL + i * bw + bw * 0.2, w = bw * 0.6, y0 = yS(0), y1 = yS(y.net);
+    const hgt = Math.max(1, Math.abs(y1 - y0));
+    const col = y.net >= 0 ? 'var(--g-blue)' : 'var(--warn)';
+    return `<rect x="${x}" y="${Math.min(y0,y1)}" width="${w}" height="${hgt}" rx="3" fill="${col}"/>
+      <rect x="${padL + i*bw}" y="${padT}" width="${bw}" height="${H-padT-padB}" fill="transparent" data-tipyear="${i}"/>
+      <text x="${x + w/2}" y="${H - 8}" text-anchor="middle">Y${y.year}</text>`;
+  }).join('');
+  $('#yearChart').innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Net savings by year"><g class="grid">${g}</g><line x1="${padL}" x2="${W-padR}" y1="${yS(0)}" y2="${yS(0)}" stroke="var(--muted)"/>${bars}</svg>`;
+}
+function niceStep(range){ const raw = range / 4, p = 10 ** Math.floor(Math.log10(raw)), n = raw / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+function short(v){ const a = Math.abs(v); return (v < 0 ? '−' : '') + (a >= 1e6 ? fmt(a/1e6, a % 1e6 ? 1 : 0) + 'M' : a >= 1e3 ? fmt(a/1e3) + 'k' : fmt(a)); }
+
+// Tooltips for the containment tracks and yearly bars
+const tip = $('#tip');
+document.addEventListener('mousemove', e => {
+  const t = e.target.closest('[data-tipuc],[data-tipyear]');
+  if (!t) { tip.hidden = true; return; }
+  const cur = R.totals.currency;
+  if (t.dataset.tipyear != null) { const y = A.years[+t.dataset.tipyear]; tip.innerHTML = `<b>Year ${y.year}</b><br>${y.monthsProd} months live · ${pct(y.blended)} contained<br>Net ${money(y.net)} ${cur}<br>Cumulative ${money(y.cumulative)} ${cur}`; }
+  else { const [ch, i] = t.dataset.tipuc.split(':'); const u = A.useCases.find(x => x.channel === ch && x.index === +i); if (!u) return;
+    tip.innerHTML = `<b>${esc(u.name)}</b><br>Target ${pct(u.target)} · break-even ${u.breakEvenPct == null ? 'n/a' : pct(u.breakEvenPct)}<br>AI ${money(u.aiCost,3)} vs agent ${money(u.agentCost,2)} ${cur} per interaction`; }
+  tip.hidden = false;
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+});
+
+/* ---------- Shared refresh ---------- */
+function refresh(rebuild = true){
+  Object.keys(S.fixed||{}).forEach(k => { const e = els[k]; if (e && e.licenseModel && e.licenseModel !== S.licenseModel) delete S.fixed[k]; });
+  if (rebuild) { renderChannels(); renderFixed(); renderUsage(); }
+  R = E.calculate(M, S);
+  A = B.analyze(S, R);
+  renderRates();
+  renderEU();
+  renderBE();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  if (document.activeElement !== $('#jsonBox')) $('#jsonBox').value = JSON.stringify(S, null, 2);
+}
+
+function renderRates(){
+$('#rateTbl tbody').innerHTML = M.elements.map(e => `<tr><td>${esc(e.name)}</td><td><span class="cat ${e.category}">${e.category === 'fixed' ? 'Fixed' : 'Usage'}</span></td><td class="small">${e.group}</td>
+  <td>${rateText(e.rate)}${e.rounding ? `<div class="small">${e.rounding}</div>` : ''}</td><td class="num">${E.euPerUnit(e.rate).toFixed(4)}</td>
+  <td class="small">${[e.notes, e.waivedWhen ? 'Waived when ' + e.waivedWhen : ''].filter(Boolean).join(' ')}</td><td>${srcLink(e.source)}</td></tr>`).join('')
+  + (M.fairUse ? `<tr><td>${M.fairUse.ivrMinutes.name}</td><td><span class="cat usage">Fair use</span></td><td class="small">self-service</td><td>Pooled min / user / month:${['named','concurrent'].map(lm => `<div class="small"${lm === S.licenseModel ? ' style="color:var(--ink);font-weight:700"' : ''}>${lm === 'named' ? 'Named' : 'Concurrent'}: ${Object.entries(M.fairUse.ivrMinutes.perUserPerMonth[lm]||{}).map(([k,v]) => (lm === S.licenseModel && k === S.license ? `<u>${k} ${fmt(v)}</u>` : `${k} ${fmt(v)}`)).join(' · ')}</div>`).join('')}<div class="small">Your org: ${S.licenseModel} ${S.license}. Then ${fmt(S.ivrOverageRate ?? defaultIvrRate(),3)} ${S.currency || 'USD'} per minute.</div></td><td class="num">not EU</td><td class="small">${M.fairUse.ivrMinutes.measuredAs}</td><td>${srcLink('fair-use')}</td></tr>` : '')
+  + M.allocations.map(a => `<tr><td>${esc(a.name)}</td><td><span class="cat fixed">Credit</span></td><td class="small">allocation</td><td>−${a.eu} EU per ${a.per.replace('-',' ')}</td><td class="num">−${a.eu}</td><td class="small">Expires monthly</td><td>${srcLink(a.source)}</td></tr>`).join('');
+}
+
+$('#rulesPanel').innerHTML = `<h2>How EU billing works</h2>
+  <p>${M.selfServiceTiers.description}</p>
+  <ul>${M.billingRules.map(r => `<li><b>${r.id}.</b> ${r.rule} ${r.confidence === 'inferred' ? '<span class="cat usage">inferred</span>' : r.confidence === 'confirmed-by-chad' ? '<span class="cat fixed">confirmed by Chad</span>' : ''} ${srcLink(r.source)}</li>`).join('')}</ul>
+  <h2 style="margin-top:16px">What ends an interaction</h2>
+  <p>${M.selfServiceTiers.interactionBoundary.description}</p>
+  <ul>${M.selfServiceTiers.interactionBoundary.endEvents.map(x => `<li>${x}</li>`).join('')}</ul>`;
+$('#beRules').innerHTML = `<h2>How break-even works</h2>
+  <ul>
+    <li><b>Use cases.</b> Each self-service path from the EU consumption tab whose highest tier is Bot, VA or AVA. Paths that touch only IVR have no AI cost and are left out.</li>
+    <li><b>AI cost per interaction</b> = EU per interaction (from tab 1, before the monthly tier round-up) × effective EU price (override and discount applied), plus the path's share of any IVR overage, split by fair-use minutes. It is charged on every interaction that enters the tier, contained or not, because that is how EUs are billed.</li>
+    <li><b>Agent cost per interaction</b> = handle minutes ÷ 60 × agent cost per handle hour, divided by chat concurrency for digital. Handle hours per FTE = paid hours × (1 − shrinkage) × occupancy.</li>
+    <li><b>Break-even containment</b> for a use case = AI cost per interaction ÷ agent cost per interaction. Above 100% it can never pay for itself.</li>
+    <li><b>Net savings</b> per use case = contained interactions × agent cost − all interactions × AI cost.</li>
+    <li><b>Program break-even</b> = the single containment rate, applied to every use case, at which labor saved covers all AI cost plus platform fees and amortized implementation.</li>
+    <li><b>Left out by default:</b> the free EU allocation (turn it on under Program costs), fixed per-seat elements such as Copilot, and other usage elements. They are not self-service costs.</li>
+    <li><b>Year by year:</b> each use case gains the growth points a year, capped at 100%. Year 1 loses the implementation months (no savings, no EU fees, platform fee still runs) and pays the implementation cost once.</li>
+  </ul>`;
+$('#openQ').innerHTML = M.openQuestions.length ? `<h2>Open questions for review</h2><div class="warnbox"><ul>${M.openQuestions.map(q => `<li>${q}</li>`).join('')}</ul></div>` : '';
+$('#openQ').hidden = !M.openQuestions.length;
+
+/* ---------- Tabs ---------- */
+const TABS = ['scenario','breakeven','rates','rules','json'];
+function setTab(tab){
+  if (!TABS.includes(tab)) tab = 'scenario';
+  $$('nav.tabs button').forEach(x => x.setAttribute('aria-selected', String(x.dataset.tab === tab)));
+  TABS.forEach(t => $('#tab-'+t).hidden = t !== tab);
+  try { localStorage.setItem(KEY + '-tab', tab); } catch(e){}
+}
+$$('nav.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+document.addEventListener('click', e => { const g = e.target.closest('[data-goto]'); if (g) { e.preventDefault(); setTab(g.dataset.goto); scrollTo({top:0}); } });
+
+/* ---------- Scenario file ---------- */
+function loadScenario(obj, msg){
+  if (!obj || typeof obj !== 'object' || !obj.selfService) throw new Error('missing selfService');
+  S = obj; S.breakEven = Object.assign({}, B.DEFAULTS, S.breakEven || {}); bindOrg(); refresh(); $('#jsonMsg').textContent = msg;
+}
+$('#copyJson').addEventListener('click', () => {
+  const box = $('#jsonBox');
+  navigator.clipboard.writeText(box.value).then(() => $('#jsonMsg').textContent = 'Copied.').catch(() => { box.select(); $('#jsonMsg').textContent = 'Selected. Press Ctrl+C to copy.'; });
+});
+$('#downloadJson').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], {type:'application/json'}));
+  a.download = (S.name || 'eu-analyzer-scenario').replace(/[^\w.-]+/g, '-') + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('#loadJson').addEventListener('click', () => { try { loadScenario(JSON.parse($('#jsonBox').value), 'Loaded.'); } catch(e) { $('#jsonMsg').textContent = 'That is not a valid scenario: ' + e.message; } });
+$('#fileJson').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { try { loadScenario(JSON.parse(t), 'Loaded ' + f.name + '.'); } catch(err) { $('#jsonMsg').textContent = 'That file is not a valid scenario: ' + err.message; } }); e.target.value = ''; });
+$('#resetJson').addEventListener('click', () => loadScenario(fresh(), 'Sample loaded.'));
+
+/* ---------- Theme ---------- */
+function applyTheme(mode){
+  if (mode === 'light' || mode === 'dark') document.documentElement.setAttribute('data-theme', mode);
+  else document.documentElement.removeAttribute('data-theme');
+  $$('[data-theme-set]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeSet === mode)));
+}
+let themeMode = 'auto';
+try { themeMode = localStorage.getItem('eu-analyzer-theme') || 'auto'; } catch(e){}
+applyTheme(themeMode);
+$$('[data-theme-set]').forEach(b => b.addEventListener('click', () => {
+  themeMode = b.dataset.themeSet; applyTheme(themeMode);
+  try { localStorage.setItem('eu-analyzer-theme', themeMode); } catch(e){}
+  refresh(false);
+}));
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (themeMode === 'auto') refresh(false); }); } catch(e){}
+
+bindOrg(); refresh();
+let startTab = 'scenario'; try { startTab = localStorage.getItem(KEY + '-tab') || 'scenario'; } catch(e){}
+setTab(startTab);
+})();
+</script>
+
+</body>
+</html>
