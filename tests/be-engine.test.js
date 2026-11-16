@@ -33,7 +33,7 @@ t('discount and price override flow into AI cost', () => {
 t('free allocation lowers AI cost when on', () => {
   const s = base({ agents: 0 }); s.breakEven.applyAllocation = true;
   const R = E.calculate(M, s); const A = B.analyze(s, R);
-  near(A.program.euPrice, R.totals.netEU / R.totals.grossEU, 'price factor');
+  near(A.program.euPrice, (1200 - 250) / 1200, 'price factor: 250 free EUs against 1,200 AVA EUs');
   assert.ok(A.useCases[0].aiCost < 1.2);
 });
 
@@ -71,6 +71,16 @@ t('AI dearer than agent never breaks even', () => {
   const s = base(); s.selfService.voice.paths[0].be.aht = 0.5; // $0.83 agent cost < $1.20
   const u = run(s).useCases[0];
   assert.ok(!u.reachable && u.breakEvenPct > 100);
+});
+
+t('fixed and other usage elements do not change break-even', () => {
+  const s1 = base(); s1.breakEven.applyAllocation = true;
+  const s2 = base(); s2.breakEven.applyAllocation = true;
+  s2.fixed = { 'agent-copilot-named': 100 }; s2.usage = { 'ai-scoring': 4000 };
+  const a1 = run(s1), a2 = run(s2);
+  assert.ok(E.calculate(M, s2).totals.grossEU > E.calculate(M, s1).totals.grossEU, 'billable total grows');
+  near(a2.useCases[0].breakEvenPct, a1.useCases[0].breakEvenPct, 'use-case break-even unchanged');
+  near(a2.program.net, a1.program.net, 'program net unchanged');
 });
 
 t('sample scenario runs', () => {

@@ -70,8 +70,13 @@
     const L = labor(s);
     const T = euResult.totals;
     const price = T.effectivePricePerEU != null ? T.effectivePricePerEU : T.pricePerEU;
-    // With the allocation applied, each AI EU costs net/gross of its price.
-    const allocFactor = s.applyAllocation && T.grossEU > 0 ? T.netEU / T.grossEU : 1;
+    // With the allocation applied, the free EUs offset self-service EUs only. Fixed per-seat and
+    // other usage elements show in the Billable totals but never enter break-even (Chad, 2026-11-16),
+    // so adding Copilot seats must not change any break-even figure.
+    const tt = (euResult.selfService && euResult.selfService.tierTotals) || {};
+    const ssEU = ['bot', 'va', 'ava'].reduce((a, t) => a + ((tt[t] && tt[t].raw) || 0), 0);
+    const allocEU = (euResult.allocation && euResult.allocation.eu) || 0;
+    const allocFactor = s.applyAllocation && ssEU > 0 ? Math.max(0, ssEU - allocEU) / ssEU : 1;
     const euPrice = price * allocFactor;
 
     // IVR overage is shared across voice paths by their fair-use minutes.

@@ -23,7 +23,7 @@ Set **Customer** on the EU consumption tab to print "Prepared for …". Use **Pr
 | Step | Formula |
 |---|---|
 | Use cases | Each self-service path whose highest tier is Bot, VA or AVA. IVR-only paths have no AI cost and are left out. |
-| AI cost per interaction | EU per interaction (tab 1, before the monthly tier round-up) × effective EU price (override and discount applied) × (net ÷ gross EU, when the free allocation is on), plus the path's share of any IVR overage, split by fair-use minutes. Charged on every interaction that enters the tier, contained or not. |
+| AI cost per interaction | EU per interaction (tab 1, before the monthly tier round-up) × effective EU price (override and discount applied) × ((self-service EUs − free allocation) ÷ self-service EUs, when the allocation is on, so fixed and other usage elements never move break-even), plus the path's share of any IVR overage, split by fair-use minutes. Charged on every interaction that enters the tier, contained or not. |
 | Handle hours per FTE | paid hours × (1 − shrinkage) × occupancy |
 | Agent cost per interaction | handle minutes ÷ 60 × (agent cost per FTE ÷ handle hours per FTE), ÷ chat concurrency for digital |
 | Break-even containment (use case) | AI cost per interaction ÷ agent cost per interaction. Above 100% it never pays. |
@@ -42,6 +42,7 @@ Defaults (Chad, 2026-11-16): the free EU allocation is applied; fixed per-seat e
 | `examples/sample-scenario.json` | 200-agent sample. Break-even inputs default when missing. |
 | `ui/template.html`, `ui/build.js` | Source for the page. |
 | `index.html` | Built page (generated; don't edit by hand). |
+| `guide.html` | Customer-facing user guide: what to gather, every input, how to read the results and the executive report. Linked from the app header. Update it when an input or output changes. |
 | `tests/be-engine.test.js` | Hand-worked checks of the break-even math. |
 
 ## Scenario format
