@@ -9,6 +9,15 @@ It combines [eu-consumption-model](https://github.com/jchadcole/eu-consumption-m
 
 **Live:** https://jchadcole.github.io/genesys-eu-analyzer/ once GitHub Pages is on (Settings → Pages → Deploy from a branch → `main`, `/ (root)`).
 
+## Executive report
+
+**Executive report** (header, or the button under "In plain words" on the Break-even tab) opens a two-page US Letter readout of the current scenario, adapted from the AVA break-even tool for many use cases:
+
+- **Page 1, the value:** headline savings over the chosen years, one plain-language summary, three big figures (savings per year at run rate, agent FTEs freed, payback), break-even vs target for each use case (up to 9, best first), and three short points.
+- **Page 2, supporting details:** program break-even, blended target, hours automated and AI cost; a per-use-case table; year-by-year chart and table; the monthly savings build-up in hours and currency; key assumptions; and the method.
+
+Set **Customer** on the EU consumption tab to print "Prepared for …". Use **Print / save as PDF** to export both pages; print styles put one page on each sheet.
+
 ## How break-even works
 
 | Step | Formula |
