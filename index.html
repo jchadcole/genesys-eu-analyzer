@@ -175,6 +175,86 @@ details.fold>summary h2::before{content:"▸ ";color:var(--muted)}
 details.fold[open]>summary h2::before{content:"▾ "}
 details.fold[open]>summary{margin-bottom:12px}
 @media (prefers-reduced-motion:no-preference){.bar i,.track .fill{transition:width .25s ease}}
+.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* Executive report: two US Letter pages on white paper in Genesys colors, shown in an overlay and printed on their own.
+   Paper colors are fixed (not theme tokens) because the pages always print on white. */
+#reportOverlay{position:fixed;inset:0;z-index:50;background:rgba(8,16,31,.72);overflow:auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px))}
+.report-toolbar{max-width:8.5in;margin:0 auto 12px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.report-scroll{overflow-x:auto}
+#report{width:8.5in;margin:0 auto;display:flex;flex-direction:column;gap:18px;--p-ink:#152550;--p-muted:#5A6582;--p-line:#DCE1EB;--p-soft:#F1F4F9;--p-orange:#FF4F1F;--p-orange-ink:#C83A12;--p-blue:#2350C8;--p-good:#1E8A52;--p-warn:#B4560A}
+#report *{box-sizing:border-box}
+.rp-page{width:8.5in;height:11in;overflow:hidden;background:#fff;color:var(--p-ink);padding:0;box-shadow:0 8px 30px rgba(0,0,0,.3);display:flex;flex-direction:column;font-family:var(--f-body)}
+.rp-band{background:#152550;color:#fff;padding:.32in .55in .22in;border-bottom:4px solid var(--p-orange);display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.rp-band h1{font-size:19pt;line-height:1.1;margin:0;font-weight:700}
+.rp-band .sub{color:#B9C3DD;font-size:9pt;margin-top:3px}
+.rp-band .date{color:#B9C3DD;font-size:9pt;text-align:right;white-space:nowrap}
+.rp-band .date b{color:#fff;font-weight:500}
+.rp-body{padding:.3in .55in .35in;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0}
+.rp-page.value .rp-body{gap:0}
+.rp-eyebrow{font-size:8.5pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--p-orange-ink)}
+.rp-headline{font-weight:700;font-size:30pt;line-height:1.08;letter-spacing:-.01em;margin:4px 0 0;text-wrap:balance}
+.rp-headline b{color:var(--p-orange-ink)}
+.rp-value{font-size:12pt;line-height:1.5;margin:8px 0 0;max-width:6.9in;color:#2c3a5c}
+.rp-value b{color:var(--p-ink)}
+.rp-big{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:.25in}
+.rp-big>div{border-top:3px solid var(--p-blue);padding-top:8px;display:flex;flex-direction:column;gap:2px}
+.rp-big>div:first-child{border-top-color:var(--p-orange)}
+.rp-big .v{font-weight:700;font-size:26pt;line-height:1.05;font-variant-numeric:tabular-nums}
+.rp-big .k{font-size:10pt;font-weight:700}
+.rp-big .n{font-size:8.5pt;color:var(--p-muted)}
+.rp-uc{margin-top:.25in}
+.rp-uc h2,.rp-section h2{font-size:11.5pt;font-weight:700;margin:0 0 6px}
+.rp-ucrow{display:grid;grid-template-columns:2.3in 1fr 1.05in;gap:10px;align-items:center;padding:4px 0;border-bottom:1px solid var(--p-line);font-size:9pt}
+.rp-ucrow .nm{font-weight:500;line-height:1.25}
+.rp-ucrow .nm small{display:block;color:var(--p-muted);font-weight:400;font-size:7.5pt}
+.rp-trk{position:relative;height:10px;background:#E6EBF2;border-radius:3px}
+.rp-trk i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.rp-trk s{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--p-ink)}
+.rp-ucrow .res{text-align:right;font-family:var(--f-mono);font-size:8.5pt}
+.rp-ucrow .res small{display:block;color:var(--p-muted);font-family:var(--f-body);font-size:7.5pt}
+.rp-key{display:flex;gap:14px;font-size:7.5pt;color:var(--p-muted);margin-top:5px}
+.rp-key span{display:inline-flex;gap:5px;align-items:center}
+.rp-key i{display:inline-block;width:12px;height:7px;border-radius:2px}
+.rp-points{margin:.22in 0 0;padding:0;list-style:none;display:grid;gap:8px;font-size:10.5pt;line-height:1.45}
+.rp-points li{padding-left:18px;position:relative}
+.rp-points li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;border-radius:50%;background:var(--p-orange)}
+.rp-foot{margin-top:auto;font-size:7.5pt;color:var(--p-muted);border-top:1px solid var(--p-line);padding-top:6px;line-height:1.4}
+.rp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rp-kpi{background:var(--p-soft);border-radius:6px;padding:7px 10px;display:flex;flex-direction:column;gap:1px}
+.rp-kpi.hero{background:#152550;color:#fff}
+.rp-kpi .k{font-size:7pt;font-weight:700;letter-spacing:.07em;text-transform:uppercase;opacity:.8}
+.rp-kpi .v{font-weight:700;font-size:17pt;line-height:1.15;font-variant-numeric:tabular-nums}
+.rp-kpi .n{font-size:7.5pt;opacity:.85}
+.rp-two{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:start}
+.rp-chart svg{width:100%;height:auto;display:block}
+.rp-chart svg text{font-family:var(--f-mono);font-size:13px;fill:#5A6582}
+#report table{width:100%;border-collapse:collapse;font-size:8pt;font-variant-numeric:tabular-nums}
+#report th,#report td{padding:2.5px 4px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--p-line)}
+#report th{color:var(--p-muted);font-weight:500;font-size:7pt;text-transform:none;letter-spacing:0}
+#report th:first-child,#report td:first-child{text-align:left}
+#report td{font-family:var(--f-mono)}
+#report td.l{font-family:var(--f-body);white-space:normal}
+#report table.dense{font-size:7pt}
+#report table.dense td,#report table.dense th{padding:1px 4px;line-height:1.25}
+#report tr.tot td{font-weight:700;border-top:1.5px solid var(--p-ink);border-bottom:0}
+#report .pos{color:var(--p-good)} #report .neg{color:var(--p-warn)}
+#report .tg{display:inline-block;font-family:var(--f-body);font-size:6.5pt;font-weight:700;color:#fff;border-radius:999px;padding:0 5px;margin-left:4px;vertical-align:1px}
+.rp-assume{display:grid;grid-template-columns:repeat(2,1fr);gap:1px 14px;font-size:7.5pt}
+.rp-assume div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted var(--p-line);padding:2px 0}
+.rp-assume span:first-child{color:var(--p-muted)}
+.rp-assume span:last-child{font-family:var(--f-mono);text-align:right;white-space:nowrap}
+.rp-assume span:first-child{min-width:0}
+@page{size:letter;margin:0}
+@media print{
+  body.report-open{background:#fff}
+  body.report-open .apphead,body.report-open .wrap,body.report-open .report-toolbar,body.report-open .tip{display:none!important}
+  body.report-open #reportOverlay{position:static;background:none;padding:0;overflow:visible}
+  body.report-open .report-scroll{overflow:visible}
+  body.report-open #report{margin:0;gap:0;display:block}
+  body.report-open .rp-page{box-shadow:none;margin:0;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.report-open .rp-page:last-child{break-after:auto;page-break-after:auto}
+}
 </style>
 
 <header class="apphead">
@@ -187,10 +267,13 @@ details.fold[open]>summary{margin-bottom:12px}
           <p>Model v<span id="ver"></span> · rates as of <span id="asof"></span> · planning model, not a Genesys billing statement</p>
         </div>
       </div>
+      <div class="top-actions">
+      <button type="button" class="btn hot" id="openReport">Executive report</button>
       <div class="theme" role="group" aria-label="Color theme">
         <button type="button" data-theme-set="auto" title="Follow your system setting">Auto</button>
         <button type="button" data-theme-set="light">Light</button>
         <button type="button" data-theme-set="dark">Dark</button>
+      </div>
       </div>
     </div>
     <nav class="tabs" role="tablist" aria-label="Sections">
@@ -211,6 +294,7 @@ details.fold[open]>summary{margin-bottom:12px}
       <section class="panel">
         <div class="panel-head"><h2>Organization</h2><span class="hint">Sets free allocation and seat type</span></div>
         <div class="fields">
+          <label class="f" title="Shown on the executive report as 'Prepared for'.">Customer<input id="customer" type="text" placeholder="Company name" autocomplete="off"></label>
           <label class="f">License model<select id="licenseModel"><option value="named">Named</option><option value="concurrent">Concurrent</option></select></label>
           <label class="f">License<select id="license"><option>CX1</option><option>CX2</option><option selected>CX3</option><option>CX4</option></select></label>
           <label class="f">Agents (billable users)<input id="agents" type="number" min="0" step="1"></label>
@@ -346,6 +430,7 @@ details.fold[open]>summary{margin-bottom:12px}
       <section class="panel prose">
         <h3>In plain words</h3>
         <div id="beNarrative"></div>
+        <div class="row-actions"><button class="btn hot" data-report>Executive report</button></div>
       </section>
     </aside>
   </div>
@@ -381,6 +466,14 @@ details.fold[open]>summary{margin-bottom:12px}
   </div>
 </div>
 <div class="tip" id="tip" hidden></div>
+<div id="reportOverlay" hidden role="dialog" aria-modal="true" aria-label="Executive report">
+  <div class="report-toolbar">
+    <span class="small" style="margin-right:auto;color:#fff">Two US Letter pages. Use Print and choose "Save as PDF" to export.</span>
+    <button type="button" class="btn hot" id="printReport">Print / save as PDF</button>
+    <button type="button" class="btn" id="closeReport">Close</button>
+  </div>
+  <div class="report-scroll"><div id="report"></div></div>
+</div>
 
 <script>
 const MODEL = {
@@ -1413,6 +1506,7 @@ $('#ladder').innerHTML = TIERS.map(t => {
 function bindOrg(){
   $('#licenseModel').value = S.licenseModel; $('#license').value = S.license; $('#agents').value = S.agents;
   $('#currency').value = S.currency || 'USD'; $('#price').value = S.pricePerEU ?? ''; $('#discount').value = S.euDiscountPct ?? 0; showIvrRate(); $('#ivrUsers').value = S.ivrBillableUsers ?? ''; $('#summaryWaive').checked = !!S.summaryCoveredByCopilot;
+  $('#customer').value = S.customer || '';
   bindBE();
 }
 const defaultIvrRate = () => (M.fairUse.ivrMinutes.overagePerMinute[S.currency || 'USD'] ?? 0);
@@ -1424,6 +1518,7 @@ $('#price').addEventListener('input', e => { const v = e.target.value; if (v ===
 $('#ivrUsers').addEventListener('input', e => { const v = e.target.value; if (v === '') delete S.ivrBillableUsers; else S.ivrBillableUsers = +v; refresh(false); });
 $('#ivrRate').addEventListener('input', e => { const v = e.target.value; if (v === '') delete S.ivrOverageRate; else S.ivrOverageRate = +v; refresh(false); });
 $('#ivrRate').addEventListener('change', e => { if (e.target.value === '') showIvrRate(); });
+$('#customer').addEventListener('input', e => { S.customer = e.target.value; refresh(false); });
 $('#summaryWaive').addEventListener('change', e => { S.summaryCoveredByCopilot = e.target.checked; refresh(false); });
 
 function renderChannels(){
@@ -1644,7 +1739,10 @@ function renderYears(cur){
   const Y = A.years;
   $('#yearsHint').textContent = `Year 1 has ${fmt(A.settings.implMonths)} months of implementation. Dollars, net of AI and program costs.`;
   $('#yearTbl tbody').innerHTML = Y.map(y => `<tr><td>Year ${y.year}</td><td class="num">${y.monthsProd}</td><td class="num">${pct(y.blended)}</td><td class="num">${money(y.net)}</td><td class="num">${money(y.cumulative)}</td></tr>`).join('');
-  // Bars = each year's net savings, one series, one axis.
+  $('#yearChart').innerHTML = yearSvg(Y, {pos:'var(--g-blue)', neg:'var(--warn)', axis:'var(--muted)', tips:true});
+}
+// Bars = each year's net savings, one series, one axis. Colors are passed in so the printed report can use fixed paper colors.
+function yearSvg(Y, c){
   const W = 640, H = 220, padL = 64, padB = 26, padT = 10, padR = 8;
   const vals = Y.map(y => y.net);
   const hi = Math.max(0, ...vals), lo = Math.min(0, ...vals);
@@ -1653,16 +1751,15 @@ function renderYears(cur){
   const yS = v => padT + (top - v) / (top - bot) * (H - padT - padB);
   const bw = (W - padL - padR) / Y.length;
   let g = '';
-  for (let v = bot; v <= top + 1e-9; v += span) g += `<line x1="${padL}" x2="${W-padR}" y1="${yS(v)}" y2="${yS(v)}"/><text x="${padL-6}" y="${yS(v)+4}" text-anchor="end">${short(v)}</text>`;
+  for (let v = bot; v <= top + 1e-9; v += span) g += `<line x1="${padL}" x2="${W-padR}" y1="${yS(v)}" y2="${yS(v)}"${c.grid ? ` stroke="${c.grid}"` : ''}/><text x="${padL-6}" y="${yS(v)+4}" text-anchor="end">${short(v)}</text>`;
   const bars = Y.map((y, i) => {
     const x = padL + i * bw + bw * 0.2, w = bw * 0.6, y0 = yS(0), y1 = yS(y.net);
     const hgt = Math.max(1, Math.abs(y1 - y0));
-    const col = y.net >= 0 ? 'var(--g-blue)' : 'var(--warn)';
-    return `<rect x="${x}" y="${Math.min(y0,y1)}" width="${w}" height="${hgt}" rx="3" fill="${col}"/>
-      <rect x="${padL + i*bw}" y="${padT}" width="${bw}" height="${H-padT-padB}" fill="transparent" data-tipyear="${i}"/>
+    return `<rect x="${x}" y="${Math.min(y0,y1)}" width="${w}" height="${hgt}" rx="3" fill="${y.net >= 0 ? c.pos : c.neg}"/>
+      ${c.tips ? `<rect x="${padL + i*bw}" y="${padT}" width="${bw}" height="${H-padT-padB}" fill="transparent" data-tipyear="${i}"/>` : ''}
       <text x="${x + w/2}" y="${H - 8}" text-anchor="middle">Y${y.year}</text>`;
   }).join('');
-  $('#yearChart').innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Net savings by year"><g class="grid">${g}</g><line x1="${padL}" x2="${W-padR}" y1="${yS(0)}" y2="${yS(0)}" stroke="var(--muted)"/>${bars}</svg>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Net savings by year"><g class="grid">${g}</g><line x1="${padL}" x2="${W-padR}" y1="${yS(0)}" y2="${yS(0)}" stroke="${c.axis}"/>${bars}</svg>`;
 }
 function niceStep(range){ const raw = range / 4, p = 10 ** Math.floor(Math.log10(raw)), n = raw / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
 function short(v){ const a = Math.abs(v); return (v < 0 ? '−' : '') + (a >= 1e6 ? fmt(a/1e6, a % 1e6 ? 1 : 0) + 'M' : a >= 1e3 ? fmt(a/1e3) + 'k' : fmt(a)); }
@@ -1680,6 +1777,128 @@ document.addEventListener('mousemove', e => {
   const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8);
   tip.style.left = x + 'px'; tip.style.top = y + 'px';
 });
+
+/* ---------- Executive report ---------- */
+// Two US Letter pages: page 1 is the value statement, page 2 the supporting details.
+const PAPER_TIER = {bot:'#0E8FA3', va:'#2350C8', ava:'#E0461A'};
+function buildReport(){
+  const P = A.program, s = A.settings, L = A.labor, Y = A.years, cur = R.totals.currency;
+  const cf = (n, compact) => { try { return new Intl.NumberFormat(undefined, {style:'currency', currency:cur, maximumFractionDigits: compact && Math.abs(n) >= 1e6 ? 1 : 0, notation: compact && Math.abs(n) >= 1e6 ? 'compact' : 'standard'}).format(n); } catch(e) { return money(n) + ' ' + cur; } };
+  const cf2 = n => { try { return new Intl.NumberFormat(undefined, {style:'currency', currency:cur, minimumFractionDigits:2, maximumFractionDigits: Math.abs(n) < 1 ? 3 : 2}).format(n); } catch(e) { return money(n,3); } };
+  const today = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+  const last = Y[Y.length - 1];
+  const yrsTxt = `${Y.length} year${Y.length > 1 ? 's' : ''}`;
+  const n = A.useCases.length;
+  const runMonthly = P.laborSaved - P.aiCost - P.platform;
+  const payback = P.paybackMonths == null ? 'Not reached' : P.paybackMonths === 0 ? 'Immediate' : fmt(P.paybackMonths, 1) + ' mo';
+  const band = (title, sub) => `<div class="rp-band"><div><h1>${title}</h1><div class="sub">${sub}</div></div>
+    <div class="date">${S.customer ? `Prepared for <b>${esc(S.customer)}</b><br>` : ''}${today}</div></div>`;
+  const org = `${S.licenseModel === 'concurrent' ? 'Concurrent' : 'Named'} ${S.license} · ${fmt(S.agents)} agents`;
+  const ok = n > 0 && P.net > 0;
+  const paying = A.useCases.filter(u => u.monthly.net >= 0);
+  const losing = A.useCases.filter(u => u.monthly.net < 0);
+  const chans = [...new Set(A.useCases.map(u => u.channel))].map(c => c === 'voice' ? 'voice' : 'digital').join(' and ');
+
+  // ---------- Page 1
+  const headline = !n ? 'No AI self-service use cases are modeled yet.'
+    : ok ? `AI self-service saves <b>${cf(last.cumulative, true)}</b> over ${yrsTxt}.`
+    : 'At these inputs, AI self-service does not pay back.';
+  const value = !n ? 'Turn on Bot, VA or AVA for at least one path on the EU consumption tab.'
+    : ok ? `Across <b>${n} ${chans} use case${n === 1 ? '' : 's'}</b>, AI resolves <b>${pct(P.blendedTarget)}</b> of ${fmt(P.interactions)} interactions a month without an agent. That takes <b>${fmt(P.hoursSaved)} agent hours</b> off the floor every month, net of every Experience Unit it consumes. The program covers its cost once each use case contains <b>${pct(P.uniformBreakEvenPct)}</b>.`
+    : `Labor saved (${cf(P.laborSaved)}) does not cover AI and program costs (${cf(P.aiCost + P.fixedMonthly)}) each month. ${P.uniformReachable ? `It would need ${pct(P.uniformBreakEvenPct)} containment across every use case.` : 'Even full containment would not cover them.'}`;
+  const sorted = [...A.useCases].sort((a, b) => b.monthly.net - a.monthly.net);
+  const shown = sorted.slice(0, 9);
+  const ucRows = shown.map(u => {
+    const be = u.breakEvenPct, hit = be != null && u.target >= be;
+    return `<div class="rp-ucrow"><div class="nm">${esc(u.name)}<small>${u.channel === 'voice' ? 'Voice' : 'Digital'} · billed as ${TIER_LABEL[u.billedTier]} · ${fmt(u.interactions)} / mo</small></div>
+      <div class="rp-trk"><i style="width:${u.target}%;background:${hit ? '#1E8A52' : '#B4560A'}"></i>${be != null && be <= 100 ? `<s style="left:calc(${be}% - 1px)"></s>` : ''}</div>
+      <div class="res">${be == null || be > 100 ? 'Never' : pct(be)} → ${pct(u.target, 0)}<small>${hit ? cf(u.monthly.net) + ' / mo' : be == null || be > 100 ? 'AI costs more than the agent' : 'below break-even'}</small></div></div>`;
+  }).join('');
+  const best = sorted[0];
+  const tightest = [...A.useCases].filter(u => u.breakEvenPct != null).sort((a, b) => b.breakEvenPct - a.breakEvenPct)[0];
+  const page1 = `<section class="rp-page value">
+    ${band('AI self-service business case', `${esc(org)} · executive summary`)}
+    <div class="rp-body">
+      <div class="rp-eyebrow">The value</div>
+      <h2 class="rp-headline">${headline}</h2>
+      <p class="rp-value">${value}</p>
+      ${n ? `<div class="rp-big">
+        <div><span class="v">${cf(P.net * 12, true)}</span><span class="k">Saved per year</span><span class="n">at full run rate, net of AI cost</span></div>
+        <div><span class="v">${fmt(P.ftesSaved, s.wholeFTE ? 0 : 1)}</span><span class="k">Agent FTEs freed</span><span class="n">${fmt(P.hoursSaved)} handle hours a month</span></div>
+        <div><span class="v">${payback}</span><span class="k">Payback</span><span class="n">from contract start</span></div>
+      </div>
+      <div class="rp-uc"><h2>Break-even and target containment by use case</h2>${ucRows}
+        <div class="rp-key"><span><i style="background:#1E8A52"></i>Target, at or above break-even</span><span><i style="background:#B4560A"></i>Target, below break-even</span><span><i style="background:#152550;width:2px;height:10px"></i>Break-even</span>${sorted.length > shown.length ? `<span>+${sorted.length - shown.length} more on page 2</span>` : ''}</div>
+      </div>
+      <ul class="rp-points">
+        <li><b>${paying.length === n ? 'Every use case pays for itself.' : `${paying.length} of ${n} use cases pay for themselves.`}</b> ${best ? `${esc(best.name)} contributes the most, ${cf(best.monthly.net)} a month.` : ''} ${losing.length ? `${losing.map(u => esc(u.name)).join(', ')} ${losing.length === 1 ? 'needs' : 'need'} higher containment or a lower tier.` : tightest && tightest !== best ? `${esc(tightest.name)} has the highest bar at ${pct(tightest.breakEvenPct)}.` : ''}</li>
+        <li><b>Capacity back to the business.</b> ${fmt(P.hoursSaved)} agent hours a month (${fmt(P.ftesSaved, s.wholeFTE ? 0 : 1)} FTEs) can be redeployed or reduced through attrition.</li>
+        <li><b>Savings grow over time.</b> With containment rising ${fmt(s.growth)} points a year after a ${fmt(s.implMonths)}-month rollout, year ${last.year} saves ${cf(last.net, true)}.</li>
+      </ul>` : ''}
+      <div class="rp-foot">Experience Unit rates from Genesys Cloud model v${M.modelVersion} (as of ${M.asOf}). Planning model, not a Genesys statement of billing. Supporting figures, year-by-year savings and assumptions are on page 2.</div>
+    </div></section>`;
+
+  // ---------- Page 2
+  const dense = n > 8;
+  const ucTable = sorted.map(u => `<tr><td class="l">${esc(u.name)}<span class="tg" style="background:${PAPER_TIER[u.billedTier]}">${TIER_LABEL[u.billedTier]}</span></td><td>${u.channel === 'voice' ? 'Voice' : 'Digital'}</td><td>${fmt(u.interactions)}</td><td>${cf2(u.aiCost)}</td><td>${fmt(u.aht, 1)} min</td><td>${cf2(u.agentCost)}</td><td>${u.breakEvenPct == null || u.breakEvenPct > 100 ? 'Never' : pct(u.breakEvenPct)}</td><td>${pct(u.target, 0)}</td><td class="${u.monthly.net >= 0 ? 'pos' : 'neg'}">${cf(u.monthly.net)}</td></tr>`).join('');
+  const hr = v => (v < 0 ? '−' : '+') + fmt(Math.abs(v / (L.perHour || 1)));
+  const dl = v => (v < 0 ? '−' : '+') + cf(Math.abs(v));
+  const build = [['Agent labor saved', P.laborSaved], ['AI Experience Units', -P.euCost], ['IVR overage share', -P.ivrCost], ['Platform fee', -P.platform], [`Implementation ÷ ${fmt(s.months)} mo`, -P.implMonthly]]
+    .filter(([k, v], i) => i < 2 || v).map(([k, v]) => `<tr><td class="l">${k}</td><td>${hr(v)}</td><td>${dl(v)}</td></tr>`).join('');
+  const yrRows = Y.map(y => `<tr><td class="l">Year ${y.year}</td><td>${y.monthsProd}</td><td>${pct(y.blended)}</td><td class="${y.net >= 0 ? 'pos' : 'neg'}">${cf(y.net, true)}</td><td class="${y.cumulative >= 0 ? 'pos' : 'neg'}">${cf(y.cumulative, true)}</td></tr>`).join('');
+  const T = R.totals;
+  const assume = [
+    ['License', `${S.licenseModel} ${S.license}`], ['Agents (billable users)', fmt(S.agents)], ['Price per EU', `${cf2(T.pricePerEU)}${T.discountPct ? ` less ${fmt(T.discountPct, 1)}%` : ''}`],
+    [s.applyAllocation ? 'AI EU price, after free EUs' : 'AI EU price used', cf2(P.euPrice)], ['Voice / month', fmt(S.selfService.voice?.interactions || 0)], ['Digital / month', fmt(S.selfService.digital?.interactions || 0)],
+    ['Cost / FTE / month', cf(s.costPerFTE)], ['Paid hours / FTE', fmt(s.paidHours)], ['Shrinkage', s.shrink + '%'],
+    ['Occupancy', s.occ + '%'], ['Handle hours / FTE', fmt(L.handleHours, 1)], ['Cost / handle hour', cf2(L.perHour)],
+    ['Chat concurrency', fmt(s.concurrency, 1)], ['Platform fee / month', cf(s.platform)], ['Implementation', cf(s.impl)], ['Implementation time', fmt(s.implMonths) + ' mo'],
+    ['Containment growth', `+${fmt(s.growth)} pts/yr`], ['IVR fair-use used', R.ivr && R.ivr.usedPct != null ? pct(R.ivr.usedPct) : 'n/a'], ['FTE counting', s.wholeFTE ? 'Whole people' : 'Fractional']
+  ].map(([k, v]) => `<div><span>${k}</span><span>${esc(v)}</span></div>`).join('');
+  const page2 = `<section class="rp-page details">
+    ${band('Supporting details', 'Figures behind the summary')}
+    <div class="rp-body">
+      <div class="rp-kpis">
+        <div class="rp-kpi hero"><span class="k">Program break-even</span><span class="v">${P.uniformBreakEvenPct == null ? 'n/a' : P.uniformReachable ? pct(P.uniformBreakEvenPct) : 'Not reachable'}</span><span class="n">containment, applied to every use case</span></div>
+        <div class="rp-kpi"><span class="k">Blended target</span><span class="v">${pct(P.blendedTarget)}</span><span class="n">${fmt(P.contained)} interactions contained</span></div>
+        <div class="rp-kpi"><span class="k">Hours automated</span><span class="v">${fmt(P.hoursSaved)}</span><span class="n">agent hours per month</span></div>
+        <div class="rp-kpi"><span class="k">AI cost / month</span><span class="v">${cf(P.aiCost)}</span><span class="n">EUs${P.ivrCost ? ' + IVR overage' : ''} for these use cases</span></div>
+      </div>
+      <div class="rp-section"><h2>Use cases</h2>
+        <table class="${dense ? 'dense' : ''}"><thead><tr><th>Use case</th><th>Channel</th><th>Interactions / mo</th><th>AI cost / int.</th><th>Agent handle</th><th>Agent cost / int.</th><th>Break-even</th><th>Target</th><th>Net / month</th></tr></thead><tbody>${ucTable}
+          <tr class="tot"><td class="l">All AI use cases</td><td></td><td>${fmt(P.interactions)}</td><td></td><td></td><td></td><td>${P.uniformReachable ? pct(P.uniformBreakEvenPct) : 'n/a'}</td><td>${pct(P.blendedTarget, 0)}</td><td>${cf(P.net)}</td></tr></tbody></table>
+        ${A.excluded.length ? `<div class="rp-key" style="margin-top:3px">Not included (no AI tier or no volume): ${A.excluded.map(x => esc(x.name)).join(', ')}.</div>` : ''}
+      </div>
+      <div class="rp-section"><h2>Savings year by year</h2>
+        <div class="rp-two"><div class="rp-chart">${yearSvg(Y, {pos:'#2350C8', neg:'#B4560A', axis:'#5A6582', grid:'#DCE1EB'})}</div>
+          <table class="${Y.length > 8 ? 'dense' : ''}"><thead><tr><th>Year</th><th>Months live</th><th>Contained</th><th>Net savings</th><th>Cumulative</th></tr></thead><tbody>${yrRows}</tbody></table></div>
+      </div>
+      <div class="rp-two" style="grid-template-columns:.8fr 1.2fr">
+        <div class="rp-section"><h2>Where the monthly savings come from</h2>
+          <table><thead><tr><th></th><th>Agent hours</th><th>${esc(cur)}</th></tr></thead><tbody>${build}
+            <tr class="tot"><td class="l">Net savings per month</td><td>${hr(P.net)}</td><td>${dl(P.net)}</td></tr></tbody></table></div>
+        <div class="rp-section"><h2>Key assumptions</h2><div class="rp-assume">${assume}</div></div>
+      </div>
+      <div class="rp-foot">Method: AI cost per interaction = EUs per interaction × EU price${s.applyAllocation ? ' × (net ÷ gross EUs, so the free allocation is shared)' : ''} + share of IVR overage, charged on every interaction that enters the AI tier. Agent cost per interaction = handle minutes × cost per handle hour${A.useCases.some(u => u.channel === 'digital') ? ' (÷ chat concurrency for digital)' : ''}. Break-even = AI cost ÷ agent cost. Program break-even adds platform fees and implementation ÷ ${fmt(s.months)} months. Year 1 counts ${12 - Math.min(12, s.implMonths)} months live and the full implementation cost. Payback = implementation time + implementation cost ÷ monthly savings. Hours convert at ${cf2(L.perHour)} per handle hour. Fixed per-seat elements (Copilot, analytics) are not included.</div>
+    </div></section>`;
+  $('#report').innerHTML = page1 + page2;
+}
+let reportReturn = null;
+function openReport(from){
+  reportReturn = from || $('#openReport');
+  buildReport();
+  $('#reportOverlay').hidden = false; document.body.classList.add('report-open');
+  $('#printReport').focus();
+}
+function closeReport(){
+  $('#reportOverlay').hidden = true; document.body.classList.remove('report-open');
+  if (reportReturn) reportReturn.focus();
+}
+$('#openReport').addEventListener('click', e => openReport(e.currentTarget));
+document.addEventListener('click', e => { const b = e.target.closest('[data-report]'); if (b) openReport(b); });
+$('#closeReport').addEventListener('click', closeReport);
+$('#printReport').addEventListener('click', () => window.print());
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#reportOverlay').hidden) closeReport(); });
 
 /* ---------- Shared refresh ---------- */
 function refresh(rebuild = true){
