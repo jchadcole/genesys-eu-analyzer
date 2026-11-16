@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EU Analyzer User Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="How to fill in the Genesys EU Analyzer and how to read its results and executive report.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: navy band, then a reading column with a sticky contents list beside it on wide screens.
+   Same Genesys tokens as the analyzer: white, navy, blue, orange. */
+:root{
+  --g-orange:#FF4F1F; --g-navy:#152550; --g-blue:#2350C8;
+  --bg:#F4F6FA; --panel:#FFFFFF; --ink:#152550; --muted:#5A6582; --line:#DCE1EB; --soft:#EEF1F7;
+  --head:#152550; --head-muted:#B9C3DD; --accent:#2350C8; --hot-ink:#C83A12;
+  --t-ivr:#7C8798; --t-bot:#0E8FA3; --t-va:#2350C8; --t-ava:#E0461A; --good:#1E8A52; --warn:#B4560A;
+  --f-body:"Roboto",system-ui,sans-serif; --f-mono:"Roboto Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1322; --panel:#141E33; --ink:#E8ECF5; --muted:#9AA6BF; --line:#26324D; --soft:#1B2740;
+  --head:#08101F; --head-muted:#9AA6BF; --accent:#6F8CF0; --hot-ink:#FF8A63;
+  --t-ivr:#7E889B; --t-bot:#1A9CB0; --t-va:#5B7FF0; --t-ava:#F0602E; --good:#4FBF83; --warn:#E5A23A; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C1322; --panel:#141E33; --ink:#E8ECF5; --muted:#9AA6BF; --line:#26324D; --soft:#1B2740;
+  --head:#08101F; --head-muted:#9AA6BF; --accent:#6F8CF0; --hot-ink:#FF8A63;
+  --t-ivr:#7E889B; --t-bot:#1A9CB0; --t-va:#5B7FF0; --t-ava:#F0602E; --good:#4FBF83; --warn:#E5A23A; color-scheme:dark }
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.6}
+a{color:var(--accent)}
+.band{background:var(--head);color:#fff;border-bottom:3px solid var(--g-orange)}
+.band .in{max-width:1120px;margin:0 auto;padding-block:28px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.band h1{margin:0;font-size:30px;line-height:1.15;text-wrap:balance}
+.band p{margin:6px 0 0;color:var(--head-muted);max-width:60ch}
+.band .open{display:inline-block;background:var(--g-orange);color:#fff;text-decoration:none;font-weight:500;padding:9px 16px;border-radius:6px;white-space:nowrap}
+.page{max-width:1120px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:860px){.page{grid-template-columns:minmax(0,1fr)}}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);font-size:14px}
+@media (max-width:860px){nav.toc{position:static}}
+nav.toc h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+nav.toc a{color:var(--ink);text-decoration:none;display:block;padding:3px 8px;border-left:2px solid var(--line)}
+nav.toc a:hover{border-left-color:var(--g-orange)}
+main{min-width:0}
+section{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px 22px;margin-bottom:18px}
+section>h2{font-size:22px;margin:0 0 4px;text-wrap:balance}
+section>h2 .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--g-orange);color:#fff;font-size:14px;margin-right:8px;vertical-align:3px}
+h3{font-size:16px;margin:20px 0 6px}
+p{margin:0 0 10px;max-width:72ch}
+.lead{color:var(--muted);margin-bottom:14px}
+ul,ol{margin:0 0 10px;padding-left:20px;max-width:72ch}
+li{margin-bottom:4px}
+.tbl{overflow-x:auto;margin:6px 0 12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:7px 8px;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;white-space:nowrap}
+td:first-child{font-weight:500;min-width:150px}
+td.ex{font-family:var(--f-mono);font-size:13px;color:var(--muted);white-space:nowrap}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin:8px 0 4px}
+.step{background:var(--soft);border-radius:8px;padding:12px 14px}
+.step b{display:block;margin-bottom:2px}
+.tip{border-left:3px solid var(--accent);background:var(--soft);padding:10px 14px;border-radius:0 6px 6px 0;margin:10px 0;max-width:72ch}
+.tip.warn{border-left-color:var(--warn)}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;color:#fff;white-space:nowrap}
+.chip.ivr{background:var(--t-ivr)}.chip.bot{background:var(--t-bot)}.chip.va{background:var(--t-va)}.chip.ava{background:var(--t-ava)}
+.ladder{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:8px 0 12px}
+.ladder div{border-radius:6px;padding:8px 10px;color:#fff;font-size:13px}
+.ladder b{display:block;font-size:15px}
+.ladder .ivr{background:var(--t-ivr)}.ladder .bot{background:var(--t-bot)}.ladder .va{background:var(--t-va)}.ladder .ava{background:var(--t-ava)}
+@media (max-width:520px){.ladder{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.demo{max-width:420px;margin:8px 0}
+.demo .trk{position:relative;height:14px;background:var(--soft);border-radius:4px;border:1px solid var(--line)}
+.demo .trk i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.demo .trk s{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.demo .lbl{font-size:13px;margin:4px 0 10px}
+.demo .lbl.ok{color:var(--good)} .demo .lbl.short{color:var(--warn)}
+.check{list-style:none;padding:0}
+.check li{padding-left:26px;position:relative}
+.check li::before{content:"";position:absolute;left:2px;top:.35em;width:14px;height:14px;border:2px solid var(--accent);border-radius:3px}
+dl.gl{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr);gap:6px 16px;margin:0}
+dl.gl dt{font-weight:700}
+dl.gl dd{margin:0}
+@media (max-width:520px){dl.gl{grid-template-columns:minmax(0,1fr)}dl.gl dd{margin-bottom:8px}}
+.mono{font-family:var(--f-mono);font-size:.92em}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:0 16px 32px}
+@media print{
+  body{background:#fff;color:#152550;font-size:11pt}
+  nav.toc,.band .open{display:none}
+  .page{display:block;padding:0 .4in}
+  section{border:0;padding:0;margin:0 0 18px;break-inside:auto}
+  .band{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .chip,.ladder div,.demo .trk i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<header class="band">
+  <div class="in">
+    <div>
+      <h1>Genesys EU Analyzer user guide</h1>
+      <p>How to describe your contact center, see the Experience Units it will use, and find out whether each AI self-service use case pays for itself.</p>
+    </div>
+    <a class="open" href="./index.html">Open the analyzer</a>
+  </div>
+</header>
+
+<div class="page">
+  <nav class="toc" aria-label="Contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#overview">How it works</a></li>
+      <li><a href="#gather">What to gather first</a></li>
+      <li><a href="#step1">Step 1: EU consumption inputs</a></li>
+      <li><a href="#read1">Reading Step 1 results</a></li>
+      <li><a href="#step2">Step 2: Break-even inputs</a></li>
+      <li><a href="#read2">Reading Step 2 results</a></li>
+      <li><a href="#report">The executive report</a></li>
+      <li><a href="#save">Saving and sharing</a></li>
+      <li><a href="#faq">Questions</a></li>
+      <li><a href="#glossary">Glossary</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section id="overview">
+      <h2>How it works</h2>
+      <p class="lead">Genesys Cloud charges AI features in Experience Units (EUs). The analyzer works in two steps, one tab each.</p>
+      <div class="steps">
+        <div class="step"><b>1 · EU consumption</b>Describe your org, your AI seats and how customers move through self-service. You get the EUs used per month and what you'll pay for them.</div>
+        <div class="step"><b>2 · Break-even</b>Every self-service path that uses AI becomes a use case. For each one, you see how much of it the AI must resolve before it pays for itself.</div>
+        <div class="step"><b>Executive report</b>A two-page summary of the business case, ready to print or save as PDF.</div>
+      </div>
+      <p>The page opens with a worked example of a 200-agent contact center. Change any number and every result updates right away. Nothing is sent anywhere: your inputs stay in your own browser.</p>
+      <div class="tip">This is a planning model, not a Genesys bill. Rates come from Genesys's published Experience Unit model and are dated in the analyzer's header.</div>
+    </section>
+
+    <section id="gather">
+      <h2>What to gather first</h2>
+      <p class="lead">You can start with estimates and refine them later. A month of reporting data is ideal.</p>
+      <ul class="check">
+        <li>Your Genesys Cloud license (CX 1–4, named or concurrent) and the number of agents</li>
+        <li>Monthly voice calls and digital interactions (web chat, messaging) that go through self-service</li>
+        <li>How those interactions split across routes, for example IVR only, IVR then a bot, or a bot then a virtual agent</li>
+        <li>Average minutes a call spends in self-service, and in the bot in particular</li>
+        <li>Average agent handle time for each type of interaction, in minutes</li>
+        <li>Fully loaded monthly cost of one agent, paid hours, shrinkage and occupancy</li>
+        <li>Any negotiated EU price or discount, platform fees and implementation cost</li>
+        <li>Seats for per-user AI features such as Agent Copilot, if you plan to buy them</li>
+      </ul>
+    </section>
+
+    <section id="step1">
+      <h2><span class="n">1</span>EU consumption inputs</h2>
+      <h3>Organization</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Input</th><th>What it means</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Customer</td><td>Your company name. It's printed on the executive report as "Prepared for".</td><td class="ex">Acme Health</td></tr>
+          <tr><td>License model, License</td><td>Your Genesys Cloud license. These settings determine how many free EUs and IVR minutes you get each month.</td><td class="ex">Named, CX 3</td></tr>
+          <tr><td>Agents</td><td>Billable users on the license.</td><td class="ex">200</td></tr>
+          <tr><td>Fair-use users</td><td>Optional. Fill this in only if your IVR minutes are pooled on a different number than Agents, such as a higher commit.</td><td class="ex">blank</td></tr>
+          <tr><td>Currency, Price per EU</td><td>Leave the price blank to use list price. Enter your negotiated rate if you have one.</td><td class="ex">USD, blank</td></tr>
+          <tr><td>EU cost discount (%)</td><td>Any percentage discount on EUs, for example for prepaying.</td><td class="ex">0</td></tr>
+          <tr><td>IVR rate / min after fair use</td><td>The per-minute charge once your pooled IVR minutes run out. It starts at the published rate.</td><td class="ex">0.01</td></tr>
+        </tbody></table></div>
+
+      <h3>Self-service use cases</h3>
+      <p>An interaction can pass through up to four self-service tiers. Genesys bills it <b>only at the highest tier it reaches</b>, so one call that goes IVR → bot → VA costs the VA price and nothing else.</p>
+      <div class="ladder" role="list">
+        <div class="ivr" role="listitem"><b>IVR</b>No EUs</div>
+        <div class="bot" role="listitem"><b>Bot</b>By minute or session</div>
+        <div class="va" role="listitem"><b>VA</b>0.5 EU each</div>
+        <div class="ava" role="listitem"><b>AVA</b>1.2 EU each</div>
+      </div>
+      <p>Enter voice and digital separately. For each channel, give the total interactions per month, then add one row (a "path") for each route customers take.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Column</th><th>What to enter</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Use case / path</td><td>A name you'll recognize. It carries through to Step 2 and the report.</td><td class="ex">Billing: IVR → bot → VA</td></tr>
+          <tr><td>Share %</td><td>The share of the channel's interactions that take this route. Shares should add up to 100%. If they don't, the tool scales them and tells you.</td><td class="ex">20</td></tr>
+          <tr><td>Tiers touched</td><td>Click each tier the route passes through. A ring marks the tier that gets billed.</td><td class="ex"><span class="chip ivr">IVR</span> <span class="chip bot">Bot</span> <span class="chip va">VA</span></td></tr>
+          <tr><td>Total IVR min (voice)</td><td>The average minutes a call spends in <i>all</i> self-service: IVR plus bot plus VA or AVA. This counts toward your IVR minute pool. It doesn't use EUs.</td><td class="ex">5.25</td></tr>
+          <tr><td>Bot min (voice)</td><td>Of those minutes, the ones spent in the bot. These set the bot charge, but only when Bot is the highest tier the call reaches.</td><td class="ex">1.5</td></tr>
+          <tr><td>Bot sessions (digital)</td><td>Bot sessions per conversation. Leave this at 1 unless the session times out and restarts during a conversation.</td><td class="ex">1</td></tr>
+        </tbody></table></div>
+      <div class="tip">A path that only touches IVR (for example, a menu then a queue) costs no EUs and is left out of break-even.</div>
+      <div class="tip warn">If a route contains an AVA block, every interaction that enters that flow is billed 1.2 EU, even when the AVA never runs. Keep AVA in its own flow.</div>
+
+      <h3>Fixed elements and other usage elements</h3>
+      <p><b>Fixed elements</b> are per-seat features such as Agent Copilot and Speech and Text Analytics. Enter the number of users who will have each one. <b>Other usage elements</b> are volume-based features such as AI Scoring, Predictive Routing and messaging channels. Enter your monthly volumes.</p>
+      <p>These elements count in your <b>Billable</b> EU total. They are <b>not</b> part of the self-service break-even, because they don't replace agent time on an interaction.</p>
+    </section>
+
+    <section id="read1">
+      <h2>Reading Step 1 results</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Panel</th><th>How to read it</th></tr></thead>
+        <tbody>
+          <tr><td>This month</td><td><b>EU consumed − free = EU billable.</b> The free EUs come with your license each month and don't carry over. The line below shows what the billable EUs cost at your price.</td></tr>
+          <tr><td>What was consumed</td><td>A bar and legend that split the month's EUs into fixed seats, self-service billed as Bot, VA and AVA, and other usage. Use it to see what drives the bill.</td></tr>
+          <tr><td>Totals</td><td>The full Billable breakdown: fixed and usage EUs, free allocation, discount, EU cost and any IVR overage, ending in the total for the month.</td></tr>
+          <tr><td>IVR fair-use minutes</td><td>The share of your pooled IVR minutes that self-service uses. Once it passes 100%, the extra minutes are charged at the IVR rate. This charge is separate from EUs.</td></tr>
+          <tr><td>Each path row</td><td>The tier it's billed as, the EUs for one interaction, and the EUs for the month.</td></tr>
+          <tr><td>In plain words</td><td>A short written summary of the month. Click <b>Next: does it pay off?</b> to go to Step 2.</td></tr>
+        </tbody></table></div>
+    </section>
+
+    <section id="step2">
+      <h2><span class="n">2</span>Break-even inputs</h2>
+      <h3>For each use case</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Input</th><th>What to enter</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Agent handle (minutes)</td><td>How long an agent would spend on one interaction of this type if the AI didn't resolve it. Include after-call work. For digital, enter the agent's handle time for one conversation.</td><td class="ex">10</td></tr>
+          <tr><td>Target containment %</td><td>The share of this use case's interactions you expect the AI to resolve with no agent.</td><td class="ex">50</td></tr>
+        </tbody></table></div>
+      <h3>Agent cost and time (shared by all use cases)</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Input</th><th>What it means</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Agent cost / FTE / month</td><td>Fully loaded monthly cost of one agent: salary, benefits, taxes, seat and overhead.</td><td class="ex">7,000</td></tr>
+          <tr><td>Paid hours / FTE / month</td><td>Paid hours in a month for one full-time agent.</td><td class="ex">173</td></tr>
+          <tr><td>Shrinkage %</td><td>Paid time not available for work: breaks, training, meetings and time off. Typically 30–35%.</td><td class="ex">30</td></tr>
+          <tr><td>Occupancy %</td><td>Share of available time spent handling interactions. Typically 75–85%.</td><td class="ex">80</td></tr>
+          <tr><td>Chat concurrency</td><td>How many digital conversations one agent handles at the same time.</td><td class="ex">2</td></tr>
+        </tbody></table></div>
+      <h3>Program costs and rollout</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Input</th><th>What it means</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Platform fee / month</td><td>Any other recurring AI fees that are not EUs.</td><td class="ex">0</td></tr>
+          <tr><td>Implementation cost</td><td>One-time cost to design, build and launch.</td><td class="ex">250,000</td></tr>
+          <tr><td>Spread over (months)</td><td>Spreads the implementation cost across this many months in the monthly view.</td><td class="ex">36</td></tr>
+          <tr><td>Implementation time</td><td>Months before go-live. During this time there are no savings and no EU charges.</td><td class="ex">3</td></tr>
+          <tr><td>Years to show, Growth / year</td><td>The length of the projection, and how many points of containment each use case gains each year.</td><td class="ex">5, 5</td></tr>
+          <tr><td>Free EU allocation</td><td>When this is checked, your free monthly EUs lower the cost of AI self-service. It's on by default.</td><td class="ex">on</td></tr>
+          <tr><td>Count only whole FTEs</td><td>Rounds agent FTEs freed down to whole people.</td><td class="ex">off</td></tr>
+        </tbody></table></div>
+    </section>
+
+    <section id="read2">
+      <h2>Reading Step 2 results</h2>
+      <h3>The use-case table</h3>
+      <p>Each row compares two costs for <b>one interaction</b>:</p>
+      <ul>
+        <li><b>AI cost</b>: the EUs it uses times your EU price, plus its share of any IVR overage. It's charged whether or not the AI resolves the interaction.</li>
+        <li><b>Agent cost</b>: what an agent's time on that interaction costs.</li>
+      </ul>
+      <p><b>Break-even containment = AI cost ÷ agent cost.</b> If an AVA interaction costs 1.18 and an agent would cost 12.04, the AVA has to resolve 9.8% of those interactions to pay for itself.</p>
+      <p>The bar shows how the target compares with break-even:</p>
+      <div class="demo" aria-hidden="true">
+        <div class="trk"><i style="width:50%;background:var(--good)"></i><s style="left:calc(9.8% - 1px)"></s></div>
+        <div class="lbl ok">Green bar past the line: the target beats break-even, and the gap is your headroom.</div>
+        <div class="trk"><i style="width:20%;background:var(--warn)"></i><s style="left:calc(24.5% - 1px)"></s></div>
+        <div class="lbl short">Orange bar short of the line: the AI needs more containment, a lower tier, or a longer handle time to justify it.</div>
+      </div>
+      <p>If a row says <b>Can't break even</b>, the AI costs more per interaction than the agent does, so no amount of containment pays it back.</p>
+      <p><b>Net / month</b> is shown in agent hours first, with the money amount below. It's the labor saved on contained interactions minus the AI cost on all of them.</p>
+      <h3>Whole program, at target</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Figure</th><th>How to read it</th></tr></thead>
+        <tbody>
+          <tr><td>Net savings / month</td><td>Labor saved across all use cases, minus AI costs, platform fees and spread-out implementation.</td></tr>
+          <tr><td>Program break-even</td><td>The one containment rate which, applied to every use case, makes the whole program pay for itself.</td></tr>
+          <tr><td>Blended target</td><td>Your targets averaged across all AI interactions, weighted by volume.</td></tr>
+          <tr><td>Agent FTEs freed</td><td>Agent hours saved ÷ handle hours per FTE. It's capacity you can redeploy or reduce through attrition.</td></tr>
+          <tr><td>Monthly savings build-up</td><td>How net savings add up: labor saved, minus each cost. Also shows payback.</td></tr>
+          <tr><td>Year by year</td><td>Net savings each year as containment grows. Year 1 leaves out the implementation months and includes the full implementation cost.</td></tr>
+        </tbody></table></div>
+    </section>
+
+    <section id="report">
+      <h2>The executive report</h2>
+      <p>Click <b>Executive report</b> at the top of the analyzer. It always reflects your current inputs.</p>
+      <ul>
+        <li><b>Page 1, the value:</b> total savings over the years you chose, a one-paragraph summary, savings per year, agent FTEs freed, payback, and a break-even vs target bar for each use case (up to nine).</li>
+        <li><b>Page 2, supporting details:</b> program break-even, a table of every use case, savings year by year, how the monthly savings add up, key assumptions and the method.</li>
+      </ul>
+      <p>Click <b>Print / save as PDF</b>, then choose "Save as PDF" as the printer. You get two US Letter pages. Press Esc or <b>Close</b> to return.</p>
+    </section>
+
+    <section id="save">
+      <h2>Saving and sharing</h2>
+      <p>The analyzer remembers your last inputs in this browser. To keep several versions, move to another computer, or send a scenario to a colleague, open the <b>Scenario file</b> tab:</p>
+      <ul>
+        <li><b>Download .json</b> saves both steps in one file. <b>Open file…</b> loads it back.</li>
+        <li><b>Copy scenario</b> copies the same content as text.</li>
+        <li><b>Reset to sample</b> brings back the worked example.</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h2>Questions</h2>
+      <h3>Why do AVA use cases need higher containment?</h3>
+      <p>AVA is billed 1.2 EU on every interaction that reaches it, whether or not it resolves it. A bot is billed by the minute or session and usually costs far less per interaction.</p>
+      <h3>Why isn't Agent Copilot in the break-even?</h3>
+      <p>Per-seat features are a flat charge that doesn't depend on how many interactions the AI resolves. They appear in the Billable totals on Step 1 and are left out of break-even, so they never change it.</p>
+      <h3>A use case can't break even. What can I change?</h3>
+      <p>Move it to a lower tier (for example VA instead of AVA), keep AVA in its own flow so fewer interactions enter it, or check that the agent handle time includes after-call work.</p>
+      <h3>Why does the tool say my shares don't total 100%?</h3>
+      <p>The paths for a channel should account for all of its interactions. The tool scales them to 100% so the results still work, but correct them for accuracy.</p>
+    </section>
+
+    <section id="glossary">
+      <h2>Glossary</h2>
+      <dl class="gl">
+        <dt>Experience Unit (EU)</dt><dd>The unit Genesys Cloud uses to bill AI features. Formerly called AI Experience tokens.</dd>
+        <dt>IVR</dt><dd>Interactive voice response: menus and prompts. No EU charge.</dd>
+        <dt>Bot</dt><dd>A scripted voice or digital bot flow.</dd>
+        <dt>VA</dt><dd>Virtual Agent: an AI agent that answers in natural language.</dd>
+        <dt>AVA</dt><dd>Agentic Virtual Agent: an AI agent that can take actions to resolve a request.</dd>
+        <dt>Containment</dt><dd>The share of interactions resolved in self-service without reaching an agent.</dd>
+        <dt>Handle time</dt><dd>Agent minutes per interaction, including after-call work.</dd>
+        <dt>FTE</dt><dd>Full-time equivalent: one full-time agent's worth of working time.</dd>
+        <dt>Fair-use minutes</dt><dd>Your org's pooled IVR minutes per month, based on license and users.</dd>
+        <dt>Free allocation</dt><dd>EUs included with your license each month. They don't carry over.</dd>
+      </dl>
+    </section>
+  </main>
+</div>
+<footer>Genesys EU Analyzer · planning model, not a Genesys statement of billing.</footer>
+</body>
+</html>
